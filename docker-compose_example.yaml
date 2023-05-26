@@ -1,0 +1,11 @@
+version: "3.0"
+services:
+
+  db_lct:
+    container_name: "db_lct"
+    image: postgres:14.1-alpine
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - "5433:5433"
