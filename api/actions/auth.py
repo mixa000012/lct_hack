@@ -8,9 +8,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from db.models import User
 from db.session import get_db
 from fastapi.security import OAuth2PasswordBearer
-from api.hashing import Hasher
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/login/token")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/user/token")
 
 
 async def get_current_user_from_token(
@@ -24,22 +23,21 @@ async def get_current_user_from_token(
         payload = jwt.decode(
             token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
         )
-        email: str = payload.get("sub")
-        if email is None:
+        uuid: str = payload.get("sub")
+        if uuid is None:
             raise credentials_exception
     except JWTError:
         raise credentials_exception
-    user = await db.execute(select(User).where(User.email == email))
+    user = await db.execute(select(User).where(User.uuid == uuid))
+    user = user.scalar()
     if user is None:
         raise credentials_exception
-    return user
+    return user.uuid
 
 
-async def auth_user(email: str, password: str, db: AsyncSession) -> None | User:
-    user = await db.execute(select(User).where(User.email == email))
+async def auth_user(name: str, birthday_date: str, db: AsyncSession) -> None | User:
+    user = await db.execute(select(User).where(User.name == name, User.birthday_date == birthday_date))
     user = user.scalar()
     if not user:
-        return
-    if not Hasher.verify_password(password, user.hashed_password):
         return
     return user

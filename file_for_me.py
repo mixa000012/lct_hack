@@ -75,7 +75,8 @@ from sqlalchemy import select, update
 
 
 async def get_coordinates_async(address):
-    url = f'https://api.openrouteservice.org/geocode/search?api_key={api_key}&text={urllib.parse.quote(address)}'
+    url = f'http://94.139.252.94:4000/geocode/search?&text={urllib.parse.quote(address)}'
+    # url = f'https://api.openrouteservice.org/geocode/search?api_key={api_key}&text={urllib.parse.quote(address)}'
 
     async with aiohttp.ClientSession() as session:
         async with session.get(url) as resp:

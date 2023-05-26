@@ -15,7 +15,8 @@ Base = declarative_base()
 
 class User(Base):
     __tablename__ = "users"
-    id = Column(Integer, primary_key=True)
+    uuid = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    name = Column(String, index=True)
     created_at = Column(DateTime, default=datetime.now())
     sex = Column(String)
     # user_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)

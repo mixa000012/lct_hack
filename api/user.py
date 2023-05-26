@@ -6,14 +6,16 @@ from fastapi import HTTPException
 from fastapi.routing import APIRouter
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi.security import OAuth2PasswordRequestForm
+from sqlalchemy import select
+from starlette import status
 
 from api.schemas import UserCreate
 from api.schemas import UserShow
 
 from db.models import User
 from db.session import get_db
-from api.hashing import Hasher
 from api.actions.auth import auth_user
+from api.actions.auth import get_current_user_from_token
 
 user_router = APIRouter()
 
@@ -22,30 +24,37 @@ user_router = APIRouter()
 async def create_user(
         obj: UserCreate, db: AsyncSession = Depends(get_db)
 ) -> UserShow:
-    new_task = User(
-        email=obj.email,
+    user = await db.execute(select(User).where(User.name == obj.name, User.birthday_date == obj.birthday_date))
+    user = user.scalars().first()
+    if user:
+        raise HTTPException(status_code=400, detail="User already exists")
+    new_user = User(
         name=obj.name,
-        hashed_password=Hasher.get_hashed_password(obj.password)
+        birthday_date=obj.birthday_date,
     )
-    db.add(new_task)
+    db.add(new_user)
     await db.commit()
-    await db.refresh(new_task)
+    await db.refresh(new_user)
     return UserShow(
-        name=new_task.name,
-        user_id=new_task.user_id,
-        email=new_task.email
+        name=new_user.name,
+        user_id=new_user.uuid,
+        birthday_date=new_user.birthday_date
     )
 
 
 @user_router.post("/token")
 async def login_for_token(form_data: OAuth2PasswordRequestForm = Depends(), db: AsyncSession = Depends(get_db)):
     user = await auth_user(form_data.username, form_data.password, db)
-    print(user.hashed_password)
     if not user:
         raise HTTPException(status_code=401, detail='There is no user in database with this email')
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE)
     access_token = create_access_token(
-        data={"sub": user.email, "other_custom_data": [1, 2, 3, 4]},
+        data={"sub": str(user.uuid)},
         expires_delta=access_token_expires,
     )
     return {'access_token': access_token, 'token_type': 'bearer'}
+
+
+@user_router.get('/login')
+async def ping(current_user: User = Depends(get_current_user_from_token)):
+    return {'success': True, 'user': current_user}

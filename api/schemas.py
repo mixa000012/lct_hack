@@ -2,54 +2,25 @@ import uuid
 import re
 
 from pydantic import BaseModel, HttpUrl, validator
+from fastapi import HTTPException
+
+LETTER_MATCH_PATTERN = re.compile(r"^[а-яА-Яa-zA-Z\-]+$")
 
 
-class Values(BaseModel):
-    commission: int
-    kg_cost: int
-    change: float
+class UserCreate(BaseModel):
+    name: str
+    birthday_date: str
+
+    @validator('name')
+    def validate_name(cls, value):
+        if not LETTER_MATCH_PATTERN.match(value):
+            raise HTTPException(
+                status_code=422, detail="Name should contains only letters"
+            )
+        return value
 
 
-class Admins(BaseModel):
-    user_id: int
-
-
-class CreateAdmins(Admins):
-    pass
-
-
-class ValuesCreate(Values):
-    pass
-
-
-class OrderCreate(BaseModel):
-    uuid = uuid.UUID
-    user_id: int
-    type: str
-    link: HttpUrl
-    size: str | None
-    price: int
-    raw_price: int
-    fio: str
-    address: str
-    number: str
-
-    @validator('number')
-    def validate_phone_number(cls, v):
-        if not re.match(r'^\+?1?\d{9,15}$', v):  # Simple regex for validation
-            raise ValueError('Invalid phone number')
-        return v
-
-
-class PhoneNumber(BaseModel):
-    number: str
-
-    @validator('number')
-    def validate_phone_number(cls, v):
-        if not re.match(r'^\+?1?\d{9,15}$', v):  # Simple regex for validation
-            raise ValueError('Invalid phone number')
-        return v
-
-
-class Url(BaseModel):
-    link: HttpUrl
+class UserShow(BaseModel):
+    name: str
+    user_id: uuid.UUID
+    birthday_date: str

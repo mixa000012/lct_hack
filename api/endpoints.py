@@ -3,7 +3,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
 from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Path
-from api.schemas import ValuesCreate, CreateAdmins, OrderCreate
 import openrouteservice
 import ast
 
@@ -22,7 +21,7 @@ client = openrouteservice.Client(
 
 
 @routes_router.post('/get_time')
-async def get_time(coordinates: str)-> dict:
+async def get_time(coordinates: str) -> dict:
     coordinates = ast.literal_eval(coordinates)
     routes = distance_matrix(client, coordinates, profile='foot-walking')
     return routes
