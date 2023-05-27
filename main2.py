@@ -2,9 +2,9 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.routing import APIRouter
 
-from api.user import user_router
-from api.endpoints import routes_router
 from api.endpoints import recs_router
+from api.endpoints import routes_router
+from api.user import user_router
 
 app = FastAPI(title="Poizon Bot")
 

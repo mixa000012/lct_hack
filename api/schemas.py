@@ -1,10 +1,11 @@
-import uuid
 import re
-from typing import List
-from pydantic import Field
-from pydantic import BaseModel, HttpUrl, validator
-from fastapi import HTTPException
 from enum import Enum
+from typing import List
+
+from fastapi import HTTPException
+from pydantic import BaseModel
+from pydantic import Field
+from pydantic import validator
 
 LETTER_MATCH_PATTERN = re.compile(r"^[а-яА-Яa-zA-Z\-]+$")
 
@@ -13,7 +14,7 @@ class UserCreate(BaseModel):
     name: str
     birthday_date: str
 
-    @validator('name')
+    @validator("name")
     def validate_name(cls, value):
         if not LETTER_MATCH_PATTERN.match(value):
             raise HTTPException(
