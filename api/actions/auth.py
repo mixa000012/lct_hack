@@ -23,16 +23,16 @@ async def get_current_user_from_token(
         payload = jwt.decode(
             token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
         )
-        uuid: str = payload.get("sub")
-        if uuid is None:
+        id: int = int(payload.get("sub"))
+        if id is None:
             raise credentials_exception
     except JWTError:
         raise credentials_exception
-    user = await db.execute(select(User).where(User.uuid == uuid))
+    user = await db.execute(select(User).where(User.id == id))
     user = user.scalar()
     if user is None:
         raise credentials_exception
-    return user.uuid
+    return user
 
 
 async def auth_user(name: str, birthday_date: str, db: AsyncSession) -> None | User:

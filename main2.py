@@ -4,7 +4,7 @@ from fastapi.routing import APIRouter
 
 from api.user import user_router
 from api.endpoints import routes_router
-from api.endpoints import values_router
+from api.endpoints import recs_router
 
 app = FastAPI(title="Poizon Bot")
 
@@ -12,7 +12,7 @@ main_api_router = APIRouter()
 
 main_api_router.include_router(user_router, prefix="/user", tags=["user"])
 main_api_router.include_router(routes_router, prefix="/api/v1/routes", tags=["routes"])
-main_api_router.include_router(values_router, prefix="/values", tags=["values"])
+main_api_router.include_router(recs_router, prefix="/recs", tags=["recs"])
 
 app.include_router(main_api_router)
 

@@ -37,19 +37,19 @@ async def create_user(
     await db.refresh(new_user)
     return UserShow(
         name=new_user.name,
-        user_id=new_user.uuid,
+        user_id=new_user.id,
         birthday_date=new_user.birthday_date
     )
 
 
 @user_router.post("/token")
-async def login_for_token(form_data: OAuth2PasswordRequestForm = Depends(), db: AsyncSession = Depends(get_db)):
+async def login_for_token(form_data: OAuth2PasswordRequestForm = Depends(), db: AsyncSession = Depends(get_db)) -> dict:
     user = await auth_user(form_data.username, form_data.password, db)
     if not user:
-        raise HTTPException(status_code=401, detail='There is no user in database with this email')
+        raise HTTPException(status_code=401, detail='There is no user in database with this fio')
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE)
     access_token = create_access_token(
-        data={"sub": str(user.uuid)},
+        data={"sub": str(user.id)},
         expires_delta=access_token_expires,
     )
     return {'access_token': access_token, 'token_type': 'bearer'}
