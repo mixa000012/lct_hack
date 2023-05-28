@@ -34,11 +34,11 @@ class Encoder:
 
 class Predictor:
     def __init__(
-            self,
-            encoder: Encoder,
-            sparse_user_group: sparse.csr,
-            als_model: implicit.als.AlternatingLeastSquares,
-            nn_model: implicit.nearest_neighbours.CosineRecommender
+        self,
+        encoder: Encoder,
+        sparse_user_group: sparse.csr,
+        als_model: implicit.als.AlternatingLeastSquares,
+        nn_model: implicit.nearest_neighbours.CosineRecommender,
     ) -> None:
         self.encoder = encoder
         self.model = als_model
@@ -47,7 +47,7 @@ class Predictor:
         self.als_model = als_model
 
     def user_to_sparce(
-            self, user_id: int | None = None, user_data: pd.DataFrame | None = None
+        self, user_id: int | None = None, user_data: pd.DataFrame | None = None
     ) -> sparse.csr_matrix:
         """
         user_ind (int) подается, как id юзера в изначальной табличке
@@ -77,7 +77,8 @@ class Predictor:
             )
 
     async def get_recs(
-            self, user_id: int | None = None,
+        self,
+        user_id: int | None = None,
     ) -> np.array:
         """
         user_id (int) - это id юзера, представленный в attend.csv
@@ -85,13 +86,19 @@ class Predictor:
         """
         user_ind = self.encoder.get_user_dict()[user_id]
 
-        nn_rec = self.nn_model.recommend(user_ind,
-                                         self.sparse_user_group[user_ind],
-                                         filter_already_liked_items=True, N=60)[0]
-        recs = nn_rec
-        als_rec = self.als_model.recommend(user_ind,
-                                           self.sparse_user_group[user_ind],
-                                           filter_already_liked_items=True, N=60)[0]
+        nn_rec = self.nn_model.recommend(
+            user_ind,
+            self.sparse_user_group[user_ind],
+            filter_already_liked_items=True,
+            N=60,
+        )[0]
+
+        als_rec = self.als_model.recommend(
+            user_ind,
+            self.sparse_user_group[user_ind],
+            filter_already_liked_items=True,
+            N=60,
+        )[0]
         als_rec = als_rec[~np.in1d(als_rec, nn_rec)]
 
         return [self.encoder.to_group_id(i) for i in np.concatenate([nn_rec, als_rec])]
@@ -117,7 +124,7 @@ def get_predictor():
     group_data["group_id"] = group_data.group_id.apply(lambda i: group_dict[i])
 
     model = get_model("ml/nearest_neighbours.pkl")
-    nn_model = get_model('ml/als.pkl')
+    nn_model = get_model("ml/als.pkl")
 
     sparse_user_group = sparse.csr_matrix(
         (
@@ -125,7 +132,9 @@ def get_predictor():
             (group_data["user_id"], group_data["group_id"]),
         )
     )
-    predictor_ = Predictor(encoder, sparse_user_group, als_model=model, nn_model=nn_model)
+    predictor_ = Predictor(
+        encoder, sparse_user_group, als_model=model, nn_model=nn_model
+    )
     return predictor_
 
 
@@ -136,22 +145,41 @@ async def get_recs(chat_id: int):
     result = await predictor.get_recs(chat_id)
     return result
 
+
 #
-groups_metros = pd.read_csv('ml/groups_metros.csv')
+groups_metros = pd.read_csv("ml/groups_metros.csv")
 
 
 async def get_final_groups(chat_id: int, metro_human=None):
     groups = await get_recs(chat_id=chat_id)
-    groups_list = groups  ## подставить результат модели Андрея (все группы отранжированные)
-    groups_metros_df = pd.DataFrame({'unique_group_id': groups_list})
-    groups_metros_df = groups_metros_df.merge(groups_metros[['id', 'around_metros']], left_on='unique_group_id',
-                                              right_on='id')
-    online_groups = groups_metros_df[groups_metros_df.around_metros == 'Онлайн'].unique_group_id[:10].tolist()
+    groups_list = groups
+    groups_metros_df = pd.DataFrame({"unique_group_id": groups_list})
+    groups_metros_df = groups_metros_df.merge(
+        groups_metros[["id", "around_metros"]], left_on="unique_group_id", right_on="id"
+    )
+    online_groups = (
+        groups_metros_df[groups_metros_df.around_metros == "Онлайн"]
+        .unique_group_id[:10]
+        .tolist()
+    )
     if metro_human is not None:
-        offline_groups = groups_metros_df[
-                             (groups_metros_df.around_metros.str.contains(metro_human, case=False))].unique_group_id[
-                         :10].tolist()
+        offline_groups = (
+            groups_metros_df[
+                (groups_metros_df.around_metros.str.contains(metro_human, case=False))
+            ]
+            .unique_group_id[:10]
+            .tolist()
+        )
     else:
-        offline_groups = groups_metros_df[~(groups_metros_df.around_metros == 'Онлайн')].unique_group_id[:10].tolist()
+        offline_groups = (
+            groups_metros_df[~(groups_metros_df.around_metros == "Онлайн")]
+            .unique_group_id[:10]
+            .tolist()
+        )
 
-    return offline_groups[:5] + online_groups[:5] + offline_groups[5:10] + online_groups[5:10]
+    return (
+        offline_groups[:5]
+        + online_groups[:5]
+        + offline_groups[5:10]
+        + online_groups[5:10]
+    )

@@ -82,4 +82,3 @@ async def main():
     await asyncio.gather(*coroutines)
 
 
-asyncio.run(main())

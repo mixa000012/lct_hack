@@ -1,10 +1,11 @@
 from datetime import datetime
 from random import randint
 
+from sqlalchemy import Boolean
 from sqlalchemy import Column
 from sqlalchemy import DateTime
 from sqlalchemy import Integer
-from sqlalchemy import String, Boolean
+from sqlalchemy import String
 from sqlalchemy.orm import declarative_base
 
 Base = declarative_base()

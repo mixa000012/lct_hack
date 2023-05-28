@@ -1,28 +1,28 @@
 from datetime import timedelta
+from random import randint
 
+from fastapi import Body
 from fastapi import Depends
 from fastapi import HTTPException
 from fastapi.routing import APIRouter
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy import select
+from sqlalchemy import update
 from sqlalchemy.ext.asyncio import AsyncSession
-from api.schemas import TokenData
+from sqlalchemy.future import select
+from sqlalchemy.orm import Session
+
 import settings
 from api.actions.auth import auth_user
 from api.actions.auth import get_current_user_from_token
+from api.schemas import TokenData
 from api.schemas import UserCreate
 from api.schemas import UserShow
+from api.schemas import UserShowAddress
+from api.schemas import UserUpdateData
 from db.models import User
 from db.session import get_db
 from security import create_access_token
-from api.schemas import UserUpdateData
-from fastapi import Body
-from sqlalchemy import update
-from sqlalchemy.future import select
-from sqlalchemy.orm import Session
-from db.models import User
-from api.schemas import UserShowAddress
-from random import randint
 
 user_router = APIRouter()
 
@@ -30,29 +30,31 @@ user_router = APIRouter()
 # Retrieve the updated user from the database    return result.scalar_one()
 async def get_id():
     return randint(100000000, 900000000)
+
+
 @user_router.post("/create_user")
 async def create_user(obj: UserCreate, db: AsyncSession = Depends(get_db)) -> UserShow:
     """
-     Asynchronously creates a new user with the provided details.
+    Asynchronously creates a new user with the provided details.
 
-     Parameters:
-     ------------
-     obj: UserCreate
-         The UserCreate object containing the details of the user to be created.
+    Parameters:
+    ------------
+    obj: UserCreate
+        The UserCreate object containing the details of the user to be created.
 
-     db: AsyncSession
-         An asynchronous SQLAlchemy session for database operations. Injected by FastAPI's dependency injection system.
+    db: AsyncSession
+        An asynchronous SQLAlchemy session for database operations. Injected by FastAPI's dependency injection system.
 
-     Returns:
-     ------------
-     UserShow
-         The newly created user information, represented as a UserShow object.
+    Returns:
+    ------------
+    UserShow
+        The newly created user information, represented as a UserShow object.
 
-     Raises:
-     ------------
-     HTTPException(status_code=409, detail="User already exists"):
-         If a user with the same name and birthday date already exists, a conflict error is raised.
-     """
+    Raises:
+    ------------
+    HTTPException(status_code=409, detail="User already exists"):
+        If a user with the same name and birthday date already exists, a conflict error is raised.
+    """
     user = await db.execute(
         select(User).where(
             User.name == obj.name, User.birthday_date == obj.birthday_date
@@ -76,24 +78,24 @@ async def create_user(obj: UserCreate, db: AsyncSession = Depends(get_db)) -> Us
 
 @user_router.post("/token")
 async def login_for_token(
-        form_data: OAuth2PasswordRequestForm = Depends(), db: AsyncSession = Depends(get_db)
+    form_data: OAuth2PasswordRequestForm = Depends(), db: AsyncSession = Depends(get_db)
 ) -> TokenData:
     """
-       This endpoint is responsible for user authentication and token generation.
+    This endpoint is responsible for user authentication and token generation.
 
-       Parameters:
-       - form_data (OAuth2PasswordRequestForm): A form request object which includes
-         the username and password for user authentication. This is required.
-       - db (AsyncSession): A database session which is used for querying the database.
-         This is required.
+    Parameters:
+    - form_data (OAuth2PasswordRequestForm): A form request object which includes
+      the username and password for user authentication. This is required.
+    - db (AsyncSession): A database session which is used for querying the database.
+      This is required.
 
-       Returns:
-       - dict: A dictionary with the access token and token type.
+    Returns:
+    - dict: A dictionary with the access token and token type.
 
-       Errors:
-       - HTTPException: 401 error if there is no user in the database with the
-         supplied username.
-       """
+    Errors:
+    - HTTPException: 401 error if there is no user in the database with the
+      supplied username.
+    """
     user = await auth_user(form_data.username, form_data.password, db)
     if not user:
         raise HTTPException(
@@ -104,10 +106,7 @@ async def login_for_token(
         data={"sub": str(user.id)},
         expires_delta=access_token_expires,
     )
-    return TokenData(
-        access_token=access_token,
-        token_type='bearer'
-    )
+    return TokenData(access_token=access_token, token_type="bearer")
 
 
 @user_router.get("/login")
@@ -117,8 +116,9 @@ async def ping(current_user: User = Depends(get_current_user_from_token)):
 
 @user_router.put("/update_user")
 async def update_user(
-        current_user: User = Depends(get_current_user_from_token),
-        update_data: UserUpdateData = Body(...), db: AsyncSession = Depends(get_db)
+    current_user: User = Depends(get_current_user_from_token),
+    update_data: UserUpdateData = Body(...),
+    db: AsyncSession = Depends(get_db),
 ) -> UserShowAddress:
     """
     This endpoint allows the update of the user's information.
@@ -132,9 +132,13 @@ async def update_user(
     """
     # The below assumes that you have a function to update the user in your database
     stmt = (
-        update(User).
-        where(User.id == current_user.id).
-        values(sex=update_data.sex, address=update_data.address, survey_result=update_data.survey_result)
+        update(User)
+        .where(User.id == current_user.id)
+        .values(
+            sex=update_data.sex,
+            address=update_data.address,
+            survey_result=update_data.survey_result,
+        )
     )
 
     # Execute the update statement
@@ -154,5 +158,5 @@ async def update_user(
         user_id=updated_user.id,
         address=updated_user.address,
         created_at=updated_user.created_at,
-        survey_result=updated_user.survey_result
+        survey_result=updated_user.survey_result,
     )

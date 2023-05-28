@@ -1,10 +1,9 @@
-import json
 from math import atan2
 from math import cos
 from math import radians
 from math import sin
 from math import sqrt
-
+import json
 import openrouteservice
 from openrouteservice.geocode import pelias_search
 
@@ -13,12 +12,12 @@ client = openrouteservice.Client(
     key="5b3ce3597851110001cf6248d4e646702ef148e5a55e272b239c23cb"
 )  # Specify your personal API key
 #
-# with open("file.json", "r", encoding="utf-8") as f:
-#     metro_data = json.load(f)
-# Convert data to the correct format and convert coordinates to floats
-# for station in metro_data:
-#     station["latitude"] = float(station["latitude"])
-#     station["longtitute"] = float(station["longtitute"])
+with open("./file.json", "r", encoding="utf-8") as f:
+    metro_data = json.load(f)
+
+for station in metro_data:
+    station["latitude"] = float(station["latitude"])
+    station["longtitute"] = float(station["longtitute"])
 
 
 def calculate_distance(lat1, lon1, lat2, lon2):
@@ -62,4 +61,4 @@ def get_metro(text):
     print(final_coords[0], final_coords[1])
 
     closest_metro = find_closest_metro_async(final_coords[0], final_coords[1])
-    return closest_metro['name']
+    return closest_metro["name"]

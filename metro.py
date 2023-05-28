@@ -6,13 +6,11 @@ from math import radians
 from math import sin
 from math import sqrt
 
-import aiohttp
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from db.models import Groups
 from db.session import engine
-from geocoding.get_coords import find_closest_metro_async
 
 
 def calculate_distance(lat1, lon1, lat2, lon2):
