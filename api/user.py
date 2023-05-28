@@ -32,6 +32,27 @@ async def get_id():
     return randint(100000000, 900000000)
 @user_router.post("/create_user")
 async def create_user(obj: UserCreate, db: AsyncSession = Depends(get_db)) -> UserShow:
+    """
+     Asynchronously creates a new user with the provided details.
+
+     Parameters:
+     ------------
+     obj: UserCreate
+         The UserCreate object containing the details of the user to be created.
+
+     db: AsyncSession
+         An asynchronous SQLAlchemy session for database operations. Injected by FastAPI's dependency injection system.
+
+     Returns:
+     ------------
+     UserShow
+         The newly created user information, represented as a UserShow object.
+
+     Raises:
+     ------------
+     HTTPException(status_code=409, detail="User already exists"):
+         If a user with the same name and birthday date already exists, a conflict error is raised.
+     """
     user = await db.execute(
         select(User).where(
             User.name == obj.name, User.birthday_date == obj.birthday_date
@@ -42,7 +63,7 @@ async def create_user(obj: UserCreate, db: AsyncSession = Depends(get_db)) -> Us
         raise HTTPException(status_code=409, detail="User already exists")
     new_user = User(
         id=await get_id(),
-        name=obj.name,
+        name=str(obj.name),
         birthday_date=obj.birthday_date,
     )
     db.add(new_user)
