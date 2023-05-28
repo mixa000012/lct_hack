@@ -2,7 +2,7 @@ import ast
 from datetime import datetime
 
 import openrouteservice
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from fastapi import Depends
 from openrouteservice.distance_matrix import distance_matrix
 from openrouteservice.geocode import pelias_autocomplete
@@ -60,7 +60,7 @@ async def get_group_from_db(group_id: int, session: AsyncSession) -> Groups:
     return group_in_db
 
 
-@routes_router.post("/groups")
+@groups_router.post("/groups")
 async def read_group(
         group_id: list[int], db: AsyncSession = Depends(get_db),
         current_user: User = Depends(get_current_user_from_token)) -> list[Group]:
@@ -131,7 +131,7 @@ async def give_recs(current_user: User = Depends(get_current_user_from_token)) -
 @recs_router.post("/new")
 async def give_recs_for_new_users(
         current_user: User = Depends(get_current_user_from_token),
-):
+) -> list[int]:
     now_interests = ast.literal_eval(current_user.survey_result)
     metro = get_metro(current_user.address)
 
@@ -181,7 +181,7 @@ async def get_group(group_name: str, current_user: User = Depends(get_current_us
     return groups
 
 
-@groups_router.post("/attends/")
+@groups_router.post("/attends")
 async def create_attend(group_id: int, current_user: User = Depends(get_current_user_from_token),
                         db: AsyncSession = Depends(get_db)):
     group = await get_group_from_db(group_id=group_id, session=db)
@@ -210,3 +210,14 @@ async def create_attend(group_id: int, current_user: User = Depends(get_current_
         start=db_attends.start,
         end=db_attends.end
     )
+
+
+@groups_router.delete("/attends/{id}")
+async def delete_attends(id: int, db: AsyncSession = Depends(get_db)):
+    db_attends = await db.execute(select(Attends).where(Attends.id == id))
+    db_attends = db_attends.scalar()
+    if not db_attends:
+        raise HTTPException(status_code=404, detail="Attends not found")
+    await db.delete(db_attends)
+    await db.commit()
+    return {"detail": "Deleted successfully"}
