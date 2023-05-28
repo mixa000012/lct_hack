@@ -22,12 +22,14 @@ from sqlalchemy.future import select
 from sqlalchemy.orm import Session
 from db.models import User
 from api.schemas import UserShowAddress
+from random import randint
 
 user_router = APIRouter()
 
 
 # Retrieve the updated user from the database    return result.scalar_one()
-
+async def get_id():
+    return randint(100000000, 900000000)
 @user_router.post("/create_user")
 async def create_user(obj: UserCreate, db: AsyncSession = Depends(get_db)) -> UserShow:
     user = await db.execute(
@@ -39,6 +41,7 @@ async def create_user(obj: UserCreate, db: AsyncSession = Depends(get_db)) -> Us
     if user:
         raise HTTPException(status_code=409, detail="User already exists")
     new_user = User(
+        id=await get_id(),
         name=obj.name,
         birthday_date=obj.birthday_date,
     )

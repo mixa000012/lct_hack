@@ -34,17 +34,20 @@ class Encoder:
 
 class Predictor:
     def __init__(
-        self,
-        encoder: Encoder,
-        sparse_user_group: sparse.csr,
-        fitted_model: implicit.als.AlternatingLeastSquares,
+            self,
+            encoder: Encoder,
+            sparse_user_group: sparse.csr,
+            als_model: implicit.als.AlternatingLeastSquares,
+            nn_model: implicit.nearest_neighbours.CosineRecommender
     ) -> None:
         self.encoder = encoder
-        self.model = fitted_model
+        self.model = als_model
         self.sparse_user_group = sparse_user_group
+        self.nn_model = nn_model
+        self.als_model = als_model
 
     def user_to_sparce(
-        self, user_id: int | None = None, user_data: pd.DataFrame | None = None
+            self, user_id: int | None = None, user_data: pd.DataFrame | None = None
     ) -> sparse.csr_matrix:
         """
         user_ind (int) подается, как id юзера в изначальной табличке
@@ -74,33 +77,26 @@ class Predictor:
             )
 
     async def get_recs(
-        self, user_id: int | None = None, user_data: pd.DataFrame | None = None
+            self, user_id: int | None = None, user_data: pd.DataFrame | None = None
     ) -> np.array:
         """
         user_id (int) - это id юзера, представленный в attend.csv
         user_data (pd.DataFrame) - это данные нового юзера представленные в табличке формата (group_id; quantity)
         """
-        if user_id:
-            sparse_user = self.user_to_sparce(user_id)
-            user_id = self.encoder.get_user_dict()[user_id]
-            user_rec = self.model.recommend(
-                user_id,
-                user_items=sparse_user,
-                N=60,
-                filter_already_liked_items=False,
-                recalculate_user=False,
-            )[0]
-            return [self.encoder.to_group_id(i) for i in user_rec]
-        elif user_data:
-            sparse_user = self.user_to_sparce(user_data=user_data)
-            user_rec = self.model.recommend(
-                userid=0,
-                user_items=sparse_user,
-                N=60,
-                filter_already_liked_items=False,
-                recalculate_user=True,
-            )[0]
-            return [self.encoder.to_group_id(i) for i in user_rec]
+        user_ind = self.encoder.get_user_dict()[user_id]
+
+        nn_rec = self.nn_model.recommend(user_ind,
+                                         self.sparse_user_group[user_ind],
+                                         filter_already_liked_items=True, N=60)[0]
+        recs = nn_rec
+        als_rec = self.als_model.recommend(user_ind,
+                                           self.sparse_user_group[user_ind],
+                                           filter_already_liked_items=True, N=60)[0]
+        nn_rec_shape = nn_rec.shape[0]
+        if nn_rec_shape < 60:
+            for i in range(nn_rec_shape, 60):
+                recs = np.append(recs, als_rec[i - nn_rec_shape])
+        return [self.encoder.to_group_id(i) for i in recs]
 
 
 def get_model(path) -> implicit.als.AlternatingLeastSquares:
@@ -110,7 +106,6 @@ def get_model(path) -> implicit.als.AlternatingLeastSquares:
 
 
 def get_predictor():
-
     group_data = pd.read_csv("ml/grp.csv")
     group_data.rename(columns={"direct_2": "quantity"}, inplace=True)
     unique_groups = group_data.group_id.unique()
@@ -124,6 +119,7 @@ def get_predictor():
     group_data["group_id"] = group_data.group_id.apply(lambda i: group_dict[i])
 
     model = get_model("ml/nearest_neighbours.pkl")
+    nn_model = get_model('ml/als.pkl')
 
     sparse_user_group = sparse.csr_matrix(
         (
@@ -131,7 +127,7 @@ def get_predictor():
             (group_data["user_id"], group_data["group_id"]),
         )
     )
-    predictor_ = Predictor(encoder, sparse_user_group, model)
+    predictor_ = Predictor(encoder, sparse_user_group, als_model=model, nn_model=nn_model)
     return predictor_
 
 

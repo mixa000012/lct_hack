@@ -108,7 +108,7 @@ async def suggest(query: str) -> list[str]:
 
 
 @routes_router.get("/address")
-async def get_address(coordinates: str):
+async def get_address(coordinates: str) -> dict:
     coordinates = ast.literal_eval(coordinates)
     coordinates = (coordinates[1], coordinates[0])
     routes = pelias_reverse(client, coordinates, country="RUS")
@@ -143,7 +143,7 @@ async def is_exist_recs(current_user: User = Depends(get_current_user_from_token
 
 @groups_router.get('/group')
 async def get_group(group_name: str, current_user: User = Depends(get_current_user_from_token),
-                    db: AsyncSession = Depends(get_db)):
+                    db: AsyncSession = Depends(get_db)) -> list[Group]:
     groups = []
     result = await db.execute(select(Groups).where(Groups.direction_3 == group_name))
     result = result.scalars().all()[::6]
