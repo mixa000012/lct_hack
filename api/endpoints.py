@@ -407,3 +407,28 @@ async def delete_attends(
     await db.delete(db_attends)
     await db.commit()
     return {"detail": "Deleted successfully"}
+
+
+@groups_router.get("/attends/{id}")
+async def get_attends_by_id(current_user: User = Depends(get_current_user_from_token),
+                            db: AsyncSession = Depends(get_db)) -> list[AttendShow]:
+    attends = await db.execute(select(Attends).where(Attends.id == current_user.id))
+    attends = attends.scalars().all()
+    attends_show = []
+    for i in attends:
+        attend = AttendShow(
+            id=i.id,
+            group_id=i.group_id,
+            user_id=i.user_id,
+            direction_2=i.direction_2,
+            direction_3=i.direction_2,
+            Offline=i.Offline,
+            date=i.date,
+            start=i.start,
+            end=i.end
+        )
+        attends_show.append(attend)
+
+        if not attends:
+            raise HTTPException(status_code=404, detail="Attends not found")
+        return attends_show

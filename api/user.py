@@ -6,11 +6,9 @@ from fastapi import Depends
 from fastapi import HTTPException
 from fastapi.routing import APIRouter
 from fastapi.security import OAuth2PasswordRequestForm
-from sqlalchemy import select
 from sqlalchemy import update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from sqlalchemy.orm import Session
 
 import settings
 from api.actions.auth import auth_user
