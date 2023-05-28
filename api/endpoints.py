@@ -234,8 +234,8 @@ async def give_recs_for_new_users(
     """
     now_interests = ast.literal_eval(current_user.survey_result)
     metro = get_metro(current_user.address)
-    if metro == 'далековато':
-        metro = 'Ленинский проспект'
+    if metro == "далековато":
+        metro = "Ленинский проспект"
 
     result = get_new_resc(now_interests, current_user.sex, current_user.birthday_date)
     result = await get_final_groups(chat_id=int(result), metro_human=metro)
@@ -358,7 +358,7 @@ async def create_attend(
         start=group.schedule_active,
         end=group.schedule_active,
         metro=group.closest_metro,
-        address=group.address
+        address=group.address,
     )
     db.add(db_attends)
     await db.commit()
@@ -374,7 +374,7 @@ async def create_attend(
         start=db_attends.start,
         end=db_attends.end,
         metro=group.closest_metro,
-        address=group.address
+        address=group.address,
     )
 
 
@@ -423,21 +423,24 @@ async def get_attends_by_id(
     attends = await db.execute(select(Attends).where(Attends.id == current_user.id))
     attends = attends.scalars().all()
     attends_show = []
-    for i in attends:
-        attend = AttendShow(
-            id=i.id,
-            group_id=i.group_id,
-            user_id=i.user_id,
-            direction_2=i.direction_2,
-            direction_3=i.direction_2,
-            Offline=i.Offline,
-            date=i.date,
-            start=i.start,
-            end=i.end,
-            metro=i.metro,
-            address=i.address
-        )
-        attends_show.append(attend)
+    if len(attends) > 0:
+        for i in attends:
+            attend = AttendShow(
+                id=i.id,
+                group_id=i.group_id,
+                user_id=i.user_id,
+                direction_2=i.direction_2,
+                direction_3=i.direction_2,
+                Offline=i.Offline,
+                date=i.date,
+                start=i.start,
+                end=i.end,
+                metro=i.metro,
+                address=i.address,
+            )
+            attends_show.append(attend)
+    else:
+        raise HTTPException(status_code=404, detail="Attends not found")
 
         if not attends:
             raise HTTPException(status_code=404, detail="Attends not found")

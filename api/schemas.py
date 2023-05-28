@@ -75,14 +75,14 @@ class Group(GroupInDB):
 
 
 class AttendShow(BaseModel):
-    id: int
-    group_id: int
-    user_id: int
-    direction_2: str
-    direction_3: str
-    Offline: bool
-    date: str
-    start: str
-    end: str
-    metro: str
-    address: str
+    id: int | None
+    group_id: int | None
+    user_id: int | None
+    direction_2: str | None
+    direction_3: str | None
+    Offline: bool | None
+    date: str | None
+    start: str | None
+    end: str | None
+    metro: str | None
+    address: str | None
