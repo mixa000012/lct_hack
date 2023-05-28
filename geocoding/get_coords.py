@@ -61,4 +61,5 @@ def get_metro(text):
     final_coords = routes.get("features")[0].get("geometry").get("coordinates")[::-1]
     print(final_coords[0], final_coords[1])
 
-    # closest_metro = find_closest_metro_async(final_coords[0], final_coords[1])
+    closest_metro = find_closest_metro_async(final_coords[0], final_coords[1])
+    return closest_metro['name']
