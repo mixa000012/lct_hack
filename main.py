@@ -17,4 +17,6 @@ main_api_router.include_router(recs_router, prefix="/recs", tags=["recs"])
 app.include_router(main_api_router)
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="10.0.0.51", port=8080)
+    uvicorn.run(app, host="10.0.0.51", port=8080,
+                ssl_keyfile="etc/letsencrypt/live/api.lapki.itatmisis.ru/fullchain.pem",
+                ssl_certfile="etc/letsencrypt/live/api.lapki.itatmisis.ru/privkey.pem")

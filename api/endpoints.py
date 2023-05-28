@@ -78,10 +78,10 @@ async def read_group(
         else:
             group = Group(
                 **group_in_db.dict(),
-                timeToWalk=1000
-                # timeToWalk=await calculate_time_to_walk(
-                #     group.coordinates_of_address, coordinates_user
-                # )
+                # timeToWalk=1000
+                timeToWalk=await calculate_time_to_walk(
+                    group.coordinates_of_address, coordinates_user
+                )
             )
             groups.append(group)
     return groups
