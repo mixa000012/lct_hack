@@ -88,7 +88,6 @@ def make_ratings_df(df):
     pivot_df = pivot_df[columns_to_rate + ["unique_participant_id"]]
     scaler = MinMaxScaler(feature_range=(0, 4))
 
-
     pivot_df[columns_to_rate] = scaler.fit_transform(pivot_df[columns_to_rate])
 
     return pivot_df.reset_index(drop=True).set_index("unique_participant_id")
