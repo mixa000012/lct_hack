@@ -21,6 +21,7 @@ from ml.new_users import get_new_resc
 from ml.script import get_recs
 from db.models import Attends
 from api.schemas import AttendShow
+from ml.script import get_final_groups
 
 order_router = APIRouter()
 
@@ -132,9 +133,10 @@ async def give_recs_for_new_users(
         current_user: User = Depends(get_current_user_from_token),
 ):
     now_interests = ast.literal_eval(current_user.survey_result)
-    # metro = get_metro(current_user.address)
+    metro = get_metro(current_user.address)
 
     result = get_new_resc(now_interests, current_user.sex, current_user.birthday_date)
+    result = await get_final_groups(chat_id=int(result), metro_human=metro)
     return result
 
 

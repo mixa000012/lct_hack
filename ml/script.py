@@ -92,11 +92,9 @@ class Predictor:
         als_rec = self.als_model.recommend(user_ind,
                                            self.sparse_user_group[user_ind],
                                            filter_already_liked_items=True, N=60)[0]
-        nn_rec_shape = nn_rec.shape[0]
-        if nn_rec_shape < 60:
-            for i in range(nn_rec_shape, 60):
-                recs = np.append(recs, als_rec[i - nn_rec_shape])
-        return [self.encoder.to_group_id(i) for i in recs]
+        als_rec = als_rec[~np.in1d(als_rec, nn_rec)]
+
+        return [self.encoder.to_group_id(i) for i in np.concatenate([nn_rec, als_rec])]
 
 
 def get_model(path) -> implicit.als.AlternatingLeastSquares:
@@ -139,12 +137,12 @@ async def get_recs(chat_id: int):
     return result
 
 #
-# groups_metros = pd.read_csv('groups_metros.csv')
+groups_metros = pd.read_csv('ml/groups_metros.csv')
 
 
-def get_final_groups(chat_id: int, metro_human=None):
-    groups =  get_recs(chat_id=chat_id, N=27000)
-    groups_list = groups.unique_group_id  ## подставить результат модели Андрея (все группы отранжированные)
+async def get_final_groups(chat_id: int, metro_human=None):
+    groups = await get_recs(chat_id=chat_id)
+    groups_list = groups  ## подставить результат модели Андрея (все группы отранжированные)
     groups_metros_df = pd.DataFrame({'unique_group_id': groups_list})
     groups_metros_df = groups_metros_df.merge(groups_metros[['id', 'around_metros']], left_on='unique_group_id',
                                               right_on='id')
