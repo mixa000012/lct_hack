@@ -35,7 +35,7 @@ class UserCreate(BaseModel):
 
 class UserShow(BaseModel):
     name: str
-    user_id: int
+    user_id: str
     birthday_date: str
 
 

@@ -34,12 +34,10 @@ api_key = "5b3ce3597851110001cf6248d4e646702ef148e5a55e272b239c23cb"
 async def calculate_time_to_walk(coordinate_place, coordinate_user):
     coordinates = ast.literal_eval(coordinate_place)
     coord = (coordinate_user, coordinates)
-    print(coord)
     try:
         routes = distance_matrix(client, coord, profile="foot-walking")
     except:
         return 1000
-    print(coord)
     time = routes.get("durations")[0][1]
     if time:
         return int(time) / 60
@@ -121,7 +119,7 @@ async def give_recs(current_user: User = Depends(get_current_user_from_token)) -
     return result
 
 
-@recs_router.post("new")
+@recs_router.post("/new")
 async def give_recs_for_new_users(
         now_interests: list[int],
         current_user: User = Depends(get_current_user_from_token),
