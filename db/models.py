@@ -4,7 +4,7 @@ from random import randint
 from sqlalchemy import Column
 from sqlalchemy import DateTime
 from sqlalchemy import Integer
-from sqlalchemy import String
+from sqlalchemy import String, Boolean
 from sqlalchemy.orm import declarative_base
 
 Base = declarative_base()
@@ -39,17 +39,14 @@ class Groups(Base):
     around_metros = Column(String)
 
 
-class UniqueGroups(Base):
-    __tablename__ = "uniquegroups"
+class Attends(Base):
+    __tablename__ = "attends"
     id = Column(Integer, primary_key=True, index=True)
-    direction_1 = Column(String)
+    group_id = Column(Integer)
+    user_id = Column(Integer)
     direction_2 = Column(String)
     direction_3 = Column(String)
-    address = Column(String)
-    okrug = Column(String)
-    district = Column(String)
-    schedule_active = Column(String)
-    schedule_closed = Column(String)
-    schedule_planned = Column(String)
-    closest_smetro = Column(String)
-    coordinates_of_address = Column(String)
+    Offline = Column(Boolean)
+    date = Column(DateTime)
+    start = Column(String)
+    end = Column(String)

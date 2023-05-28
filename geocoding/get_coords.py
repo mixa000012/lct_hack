@@ -12,13 +12,13 @@ coords = ((8.34234, 48.23424), (8.34423, 48.26424))
 client = openrouteservice.Client(
     key="5b3ce3597851110001cf6248d4e646702ef148e5a55e272b239c23cb"
 )  # Specify your personal API key
-
-with open("file.json", "r", encoding="utf-8") as f:
-    metro_data = json.load(f)
+#
+# with open("file.json", "r", encoding="utf-8") as f:
+#     metro_data = json.load(f)
 # Convert data to the correct format and convert coordinates to floats
-for station in metro_data:
-    station["latitude"] = float(station["latitude"])
-    station["longtitute"] = float(station["longtitute"])
+# for station in metro_data:
+#     station["latitude"] = float(station["latitude"])
+#     station["longtitute"] = float(station["longtitute"])
 
 
 def calculate_distance(lat1, lon1, lat2, lon2):
@@ -61,4 +61,4 @@ def get_metro(text):
     final_coords = routes.get("features")[0].get("geometry").get("coordinates")[::-1]
     print(final_coords[0], final_coords[1])
 
-    closest_metro = find_closest_metro_async(final_coords[0], final_coords[1])
+    # closest_metro = find_closest_metro_async(final_coords[0], final_coords[1])

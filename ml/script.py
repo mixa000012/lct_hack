@@ -77,7 +77,7 @@ class Predictor:
             )
 
     async def get_recs(
-            self, user_id: int | None = None, user_data: pd.DataFrame | None = None
+            self, user_id: int | None = None,
     ) -> np.array:
         """
         user_id (int) - это id юзера, представленный в attend.csv
@@ -137,3 +137,23 @@ predictor = get_predictor()
 async def get_recs(chat_id: int):
     result = await predictor.get_recs(chat_id)
     return result
+
+#
+# groups_metros = pd.read_csv('groups_metros.csv')
+
+
+def get_final_groups(chat_id: int, metro_human=None):
+    groups =  get_recs(chat_id=chat_id, N=27000)
+    groups_list = groups.unique_group_id  ## подставить результат модели Андрея (все группы отранжированные)
+    groups_metros_df = pd.DataFrame({'unique_group_id': groups_list})
+    groups_metros_df = groups_metros_df.merge(groups_metros[['id', 'around_metros']], left_on='unique_group_id',
+                                              right_on='id')
+    online_groups = groups_metros_df[groups_metros_df.around_metros == 'Онлайн'].unique_group_id[:10].tolist()
+    if metro_human is not None:
+        offline_groups = groups_metros_df[
+                             (groups_metros_df.around_metros.str.contains(metro_human, case=False))].unique_group_id[
+                         :10].tolist()
+    else:
+        offline_groups = groups_metros_df[~(groups_metros_df.around_metros == 'Онлайн')].unique_group_id[:10].tolist()
+
+    return offline_groups[:5] + online_groups[:5] + offline_groups[5:10] + online_groups[5:10]

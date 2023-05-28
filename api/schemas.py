@@ -18,7 +18,7 @@ class TokenData(BaseModel):
 class UserUpdateData(BaseModel):
     sex: str | None
     address: str | None
-    survey_result: str| None
+    survey_result: str | None
 
 
 class UserCreate(BaseModel):
@@ -72,3 +72,15 @@ class GroupInDB(BaseModel):
 
 class Group(GroupInDB):
     timeToWalk: int = Field(...)
+
+
+class AttendShow(BaseModel):
+    id: int
+    group_id: int
+    user_id: int
+    direction_2: str
+    direction_3: str
+    Offline: bool
+    date: str
+    start: str
+    end: str
