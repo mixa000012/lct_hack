@@ -14,6 +14,13 @@ main_api_router = APIRouter()
 origins = [
     "http://lapki.itatmisis.ru",
     "https://lapki.itatmisis.ru",
+    "http://89.19.174.181",
+    "https://89.19.174.181",
+    "http://vladexa.ru",
+    "https://vladexa.ru",
+    "http://localhost",
+    "https://localhost",
+
 ]
 
 app.add_middleware(
