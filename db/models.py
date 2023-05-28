@@ -19,6 +19,7 @@ class User(Base):
     # user_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     birthday_date = Column(String)
     address = Column(String)
+    survey_result = Column(String)
 
 
 class Groups(Base):

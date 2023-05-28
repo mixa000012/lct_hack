@@ -25,15 +25,20 @@ recs_router = APIRouter()
 
 routes_router = APIRouter()
 
+groups_router = APIRouter()
+
 client = openrouteservice.Client(
     key="5b3ce3597851110001cf6248d849a8330bbd463fb95a896f83abd13f"
 )  # Specify your personal API key
 api_key = "5b3ce3597851110001cf6248d4e646702ef148e5a55e272b239c23cb"
 
 
-async def calculate_time_to_walk(coordinate_place, coordinate_user):
+async def calculate_time_to_walk(coordinate_place, address):
+    routes = pelias_search(client, address, country="RUS")
+    final_coords = routes.get("features")[0].get("geometry").get("coordinates")[::-1]
+    coordinates_user = (final_coords[0], final_coords[1])
     coordinates = ast.literal_eval(coordinate_place)
-    coord = (coordinate_user, coordinates)
+    coord = (coordinates_user, coordinates)
     try:
         routes = distance_matrix(client, coord, profile="foot-walking")
     except:
@@ -56,9 +61,7 @@ async def read_group(
         group_id: list[int], db: AsyncSession = Depends(get_db),
         current_user: User = Depends(get_current_user_from_token)) -> list[Group]:
     groups = []
-    routes = pelias_search(client, current_user.address, country="RUS")
-    final_coords = routes.get("features")[0].get("geometry").get("coordinates")[::-1]
-    coordinates_user = (final_coords[0], final_coords[1])
+
     for i in group_id:
         group = await get_group_from_db(i, db)
         group_in_db = GroupInDB(
@@ -66,7 +69,6 @@ async def read_group(
             name=group.direction_3,
             type=group.direction_1,
             address=group.address,
-            tags=["tag1", "tag2", "tag3"],
             metro=group.closest_metro,
             time=group.schedule_active
             if len(group.schedule_active) > 0
@@ -80,7 +82,7 @@ async def read_group(
                 **group_in_db.dict(),
                 # timeToWalk=1000
                 timeToWalk=await calculate_time_to_walk(
-                    group.coordinates_of_address, coordinates_user
+                    group.coordinates_of_address, current_user.address
                 )
             )
             groups.append(group)
@@ -121,10 +123,11 @@ async def give_recs(current_user: User = Depends(get_current_user_from_token)) -
 
 @recs_router.post("/new")
 async def give_recs_for_new_users(
-        now_interests: list[int],
         current_user: User = Depends(get_current_user_from_token),
 ):
-    metro = get_metro(current_user.address)
+    now_interests = ast.literal_eval(current_user.survey_result)
+    # metro = get_metro(current_user.address)
+
     result = get_new_resc(now_interests, current_user.sex, current_user.birthday_date)
     return result
 
@@ -136,6 +139,38 @@ async def is_exist_recs(current_user: User = Depends(get_current_user_from_token
         return True
     except KeyError:
         return False
+
+
+@groups_router.get('/group')
+async def get_group(group_name: str, current_user: User = Depends(get_current_user_from_token),
+                    db: AsyncSession = Depends(get_db)):
+    groups = []
+    result = await db.execute(select(Groups).where(Groups.direction_3 == group_name))
+    result = result.scalars().all()[::6]
+    for group in result:
+        group_in_db = GroupInDB(
+            id=group.id,
+            name=group.direction_3,
+            type=group.direction_1,
+            address=group.address,
+            metro=group.closest_metro,
+            time=group.schedule_active
+            if len(group.schedule_active) > 0
+            else group.schedule_closed,
+        )
+        if group.closest_metro == "Онлайн":
+            group = Group(**group_in_db.dict(), timeToWalk=0)
+            groups.append(group)
+        else:
+            group = Group(
+                **group_in_db.dict(),
+                # timeToWalk=1000
+                timeToWalk=await calculate_time_to_walk(
+                    group.coordinates_of_address, current_user.address
+                )
+            )
+            groups.append(group)
+    return groups
 
 # @admin_router.get('/all')
 # async def get_all_admins(db: AsyncSession = Depends(get_db)):

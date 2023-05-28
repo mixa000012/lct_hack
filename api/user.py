@@ -37,7 +37,7 @@ async def create_user(obj: UserCreate, db: AsyncSession = Depends(get_db)) -> Us
     )
     user = user.scalars().first()
     if user:
-        raise HTTPException(status_code=400, detail="User already exists")
+        raise HTTPException(status_code=409, detail="User already exists")
     new_user = User(
         name=obj.name,
         birthday_date=obj.birthday_date,
@@ -110,7 +110,7 @@ async def update_user(
     stmt = (
         update(User).
         where(User.id == current_user.id).
-        values(sex=update_data.sex, address=update_data.address)
+        values(sex=update_data.sex, address=update_data.address, survey_result=update_data.survey_result)
     )
 
     # Execute the update statement
@@ -129,5 +129,6 @@ async def update_user(
         name=updated_user.name,
         user_id=updated_user.id,
         address=updated_user.address,
-        created_at=updated_user.created_at
+        created_at=updated_user.created_at,
+        survey_result=updated_user.survey_result
     )

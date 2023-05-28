@@ -18,6 +18,7 @@ class TokenData(BaseModel):
 class UserUpdateData(BaseModel):
     sex: str | None
     address: str | None
+    survey_result: str| None
 
 
 class UserCreate(BaseModel):
@@ -43,6 +44,7 @@ class UserShowAddress(UserShow):
     sex: str
     address: str
     created_at: str
+    survey_result: str
 
 
 class GroupType(str, Enum):
@@ -63,7 +65,6 @@ class GroupInDB(BaseModel):
     id: int
     name: str
     type: GroupType | str
-    tags: List[str]
     address: str
     metro: str | None
     time: List[str] | str
