@@ -11,7 +11,7 @@ import settings
 from db.models import User
 from db.session import get_db
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/user/token")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/user/token")
 
 
 async def get_current_user_from_token(

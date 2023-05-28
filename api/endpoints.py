@@ -5,7 +5,7 @@ from fastapi import APIRouter
 from fastapi import Depends
 from openrouteservice.distance_matrix import distance_matrix
 from openrouteservice.geocode import pelias_autocomplete
-from openrouteservice.geocode import pelias_reverse
+from openrouteservice.geocode import pelias_reverse, pelias_search
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -55,10 +55,12 @@ async def get_group_from_db(group_id: int, session: AsyncSession) -> Groups:
 
 @routes_router.post("/groups")
 async def read_group(
-    group_id: list[int], coordinates_user: str, db: AsyncSession = Depends(get_db)
-) -> list[Group]:
+        group_id: list[int], db: AsyncSession = Depends(get_db),
+        current_user: User = Depends(get_current_user_from_token)) -> list[Group]:
     groups = []
-    coordinates_user = ast.literal_eval(coordinates_user)
+    routes = pelias_search(client, current_user.address, country="RUS")
+    final_coords = routes.get("features")[0].get("geometry").get("coordinates")[::-1]
+    coordinates_user = (final_coords[0], final_coords[1])
     for i in group_id:
         group = await get_group_from_db(i, db)
         group_in_db = GroupInDB(
@@ -114,20 +116,28 @@ async def get_address(coordinates: str):
 
 
 @recs_router.get("/")
-async def give_recs(chat_id: int) -> list[int]:
-    result = await get_recs(chat_id)
+async def give_recs(current_user: User = Depends(get_current_user_from_token)) -> list[int]:
+    result = await get_recs(int(current_user.id))
     return result
 
 
 @recs_router.post("new")
 async def give_recs_for_new_users(
-    now_interests: list[int],
-    current_user: User = Depends(get_current_user_from_token),
+        now_interests: list[int],
+        current_user: User = Depends(get_current_user_from_token),
 ):
     metro = get_metro(current_user.address)
     result = get_new_resc(now_interests, current_user.sex, current_user.birthday_date)
     return result
 
+
+@recs_router.get('/is_exist')
+async def is_exist_recs(current_user: User = Depends(get_current_user_from_token)) -> bool:
+    try:
+        await get_recs(int(current_user.id))
+        return True
+    except KeyError:
+        return False
 
 # @admin_router.get('/all')
 # async def get_all_admins(db: AsyncSession = Depends(get_db)):

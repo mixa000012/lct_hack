@@ -10,6 +10,16 @@ from pydantic import validator
 LETTER_MATCH_PATTERN = re.compile(r"^[а-яА-Яa-zA-Z\-]+$")
 
 
+class TokenData(BaseModel):
+    access_token: str
+    token_type: str
+
+
+class UserUpdateData(BaseModel):
+    sex: str | None
+    address: str | None
+
+
 class UserCreate(BaseModel):
     name: str
     birthday_date: str
@@ -27,6 +37,12 @@ class UserShow(BaseModel):
     name: str
     user_id: int
     birthday_date: str
+
+
+class UserShowAddress(UserShow):
+    sex: str
+    address: str
+    created_at: str
 
 
 class GroupType(str, Enum):
