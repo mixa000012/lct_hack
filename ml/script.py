@@ -123,7 +123,7 @@ def get_predictor():
     group_data["user_id"] = group_data.user_id.apply(lambda i: user_dict[i])
     group_data["group_id"] = group_data.group_id.apply(lambda i: group_dict[i])
 
-    model = get_model("ml/implicit_als_model.pkl")
+    model = get_model("ml/nearest_neighbours.pkl")
 
     sparse_user_group = sparse.csr_matrix(
         (
