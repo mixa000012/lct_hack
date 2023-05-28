@@ -84,3 +84,5 @@ class AttendShow(BaseModel):
     date: str
     start: str
     end: str
+    metro: str
+    address: str

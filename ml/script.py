@@ -73,7 +73,7 @@ class Predictor:
                 row_indices.append(0)
                 col_indices.append(group)
             return sparse.csr_matrix(
-                (data, (row_indices, col_indices)), shape=(1, len(unique_groups))
+                (data, (row_indices, col_indices)), shape=(1)
             )
 
     async def get_recs(

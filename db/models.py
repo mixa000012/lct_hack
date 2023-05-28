@@ -51,3 +51,5 @@ class Attends(Base):
     date = Column(DateTime)
     start = Column(String)
     end = Column(String)
+    metro = Column(String)
+    address= Column(String)
