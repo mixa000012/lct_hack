@@ -35,6 +35,7 @@ class Groups(Base):
     schedule_planned = Column(String)
     closest_metro = Column(String)
     coordinates_of_address = Column(String)
+    around_metros = Column(String)
 
 
 class UniqueGroups(Base):

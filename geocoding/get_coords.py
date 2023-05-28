@@ -13,7 +13,7 @@ client = openrouteservice.Client(
     key="5b3ce3597851110001cf6248d4e646702ef148e5a55e272b239c23cb"
 )  # Specify your personal API key
 
-with open("../file.json", "r", encoding="utf-8") as f:
+with open("file.json", "r", encoding="utf-8") as f:
     metro_data = json.load(f)
 # Convert data to the correct format and convert coordinates to floats
 for station in metro_data:
@@ -55,13 +55,10 @@ def find_closest_metro_async(lat, lon):
     return closest_metro
 
 
-text = "Москва, улица Крупской, дом 1, корпус 1"
-routes = pelias_search(client, text, country="RUS")
-print(routes)
-final_coords = routes.get("features")[0].get("geometry").get("coordinates")[::-1]
-print(final_coords[0], final_coords[1])
+def get_metro(text):
+    routes = pelias_search(client, text, country="RUS")
+    print(routes)
+    final_coords = routes.get("features")[0].get("geometry").get("coordinates")[::-1]
+    print(final_coords[0], final_coords[1])
 
-closest_metro = find_closest_metro_async(final_coords[0], final_coords[1])
-print(
-    f"The closest metro station is {closest_metro['name']} at a distance of {calculate_distance(final_coords[0], final_coords[1], closest_metro['latitude'], closest_metro['longtitute'])} km."
-)
+    closest_metro = find_closest_metro_async(final_coords[0], final_coords[1])

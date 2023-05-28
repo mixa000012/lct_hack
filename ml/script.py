@@ -86,7 +86,7 @@ class Predictor:
             user_rec = self.model.recommend(
                 user_id,
                 user_items=sparse_user,
-                N=10,
+                N=60,
                 filter_already_liked_items=False,
                 recalculate_user=False,
             )[0]
@@ -96,7 +96,7 @@ class Predictor:
             user_rec = self.model.recommend(
                 userid=0,
                 user_items=sparse_user,
-                N=10,
+                N=60,
                 filter_already_liked_items=False,
                 recalculate_user=True,
             )[0]
