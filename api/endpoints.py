@@ -321,6 +321,17 @@ async def get_group(
     return groups
 
 
+async def get_date():
+    return datetime.now()
+
+
+async def check_attend(group_id: int, user_id: int,
+                       db: AsyncSession = Depends(get_db)):
+    stmt = select(Attends).where(Attends.group_id == group_id, Attends.user_id == user_id)
+    result = await db.execute(stmt)
+    return result.scalar_one_or_none()
+
+
 @groups_router.post("/attends")
 async def create_attend(
         group_id: int,
@@ -346,6 +357,9 @@ async def create_attend(
     AttendShow
         The newly created attendance record, represented as an AttendShow object.
     """
+    existing_attend = await check_attend(group_id=group_id, user_id=current_user.id)
+    if existing_attend:
+        raise HTTPException(status_code=400, detail="Attendance record already exists.")
     group = await get_group_from_db(group_id=group_id, session=db)
     db_attends = Attends(
         id=await get_id(),
@@ -354,7 +368,7 @@ async def create_attend(
         direction_2=group.direction_2,
         direction_3=group.direction_3,
         Offline=False if group.closest_metro == "Онлайн" else True,
-        date=datetime.now(),
+        date=get_date(),
         start=group.schedule_active,
         end=group.schedule_active,
         metro=group.closest_metro,
@@ -430,7 +444,7 @@ async def get_attends_by_id(
                 group_id=i.group_id,
                 user_id=i.user_id,
                 direction_2=i.direction_2,
-                direction_3=i.direction_2,
+                direction_3=i.direction_3,
                 Offline=i.Offline,
                 date=i.date,
                 start=i.start,
