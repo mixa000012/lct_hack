@@ -45,7 +45,6 @@ class Attends(Base):
     id = Column(Integer, primary_key=True, index=True)
     group_id = Column(Integer)
     user_id = Column(Integer)
-    direction_1 = Column(String)
     direction_2 = Column(String)
     direction_3 = Column(String)
     Offline = Column(Boolean)
