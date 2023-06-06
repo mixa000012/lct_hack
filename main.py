@@ -5,7 +5,7 @@ from fastapi.routing import APIRouter
 from api.endpoints import recs_router
 from api.endpoints import routes_router, groups_router
 from api.user import user_router
-from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.cors import CORSMiddleware
 
 
 app = FastAPI(title="lct_hack")

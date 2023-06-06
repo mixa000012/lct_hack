@@ -75,7 +75,7 @@ class Predictor:
             return sparse.csr_matrix((data, (row_indices, col_indices)), shape=(1))
 
     async def get_recs(
-        self,
+        self, N,
         user_id: int | None = None,
     ) -> np.array:
         """
@@ -88,18 +88,18 @@ class Predictor:
             user_ind,
             self.sparse_user_group[user_ind],
             filter_already_liked_items=True,
-            N=60,
+            N=3000,
         )[0]
 
         als_rec = self.als_model.recommend(
             user_ind,
             self.sparse_user_group[user_ind],
             filter_already_liked_items=True,
-            N=60,
+            N=3000,
         )[0]
         als_rec = als_rec[~np.in1d(als_rec, nn_rec)]
 
-        return [self.encoder.to_group_id(i) for i in np.concatenate([nn_rec, als_rec])]
+        return [self.encoder.to_group_id(i) for i in np.concatenate([nn_rec, als_rec])][:N]
 
 
 def get_model(path) -> implicit.als.AlternatingLeastSquares:
@@ -139,8 +139,8 @@ def get_predictor():
 predictor = get_predictor()
 
 
-async def get_recs(chat_id: int):
-    result = await predictor.get_recs(chat_id)
+async def get_recs(chat_id: int, N):
+    result = await predictor.get_recs(user_id=chat_id, N=N)
     return result
 
 
@@ -149,7 +149,7 @@ groups_metros = pd.read_csv("ml/groups_metros.csv")
 
 
 async def get_final_groups(chat_id: int, metro_human=None):
-    groups = await get_recs(chat_id=chat_id)
+    groups = await get_recs(chat_id=chat_id, N=6000)
     groups_list = groups
     groups_metros_df = pd.DataFrame({"unique_group_id": groups_list})
     groups_metros_df = groups_metros_df.merge(
@@ -178,6 +178,4 @@ async def get_final_groups(chat_id: int, metro_human=None):
     return (
         offline_groups[:5]
         + online_groups[:5]
-        + offline_groups[5:10]
-        + online_groups[5:10]
     )

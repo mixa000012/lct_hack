@@ -22,16 +22,8 @@ class UserUpdateData(BaseModel):
 
 
 class UserCreate(BaseModel):
-    name: str
+    name: str | int
     birthday_date: str
-
-    @validator("name")
-    def validate_name(cls, value):
-        if not LETTER_MATCH_PATTERN.match(value):
-            raise HTTPException(
-                status_code=422, detail="Name should contains only letters"
-            )
-        return value
 
 
 class UserShow(BaseModel):
@@ -75,14 +67,14 @@ class Group(GroupInDB):
 
 
 class AttendShow(BaseModel):
-    id: int | None
-    group_id: int | None
-    user_id: int | None
-    direction_2: str | None
-    direction_3: str | None
-    Offline: bool | None
-    date: str | None
-    start: str | None
-    end: str | None
-    metro: str | None
-    address: str | None
+    id: int
+    group_id: int
+    user_id: int
+    direction_2: str
+    direction_3: str
+    Offline: bool
+    date: str
+    start: str
+    end: str
+    metro: str
+    address: str

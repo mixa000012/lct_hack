@@ -210,7 +210,7 @@ async def give_recs(
     list[int]
         A list of integer identifiers for the recommended groups.
     """
-    result = await get_recs(int(current_user.id))
+    result = await get_recs(int(current_user.id), N=12)
     return result
 
 
@@ -260,7 +260,7 @@ async def is_exist_recs(
         Returns True if recommendations for the current user exist; otherwise, it returns False.
     """
     try:
-        await get_recs(int(current_user.id))
+        await get_recs(int(current_user.id), N=10)
         return True
     except KeyError:
         return False
@@ -420,7 +420,7 @@ async def get_attends_by_id(
         current_user: User = Depends(get_current_user_from_token),
         db: AsyncSession = Depends(get_db),
 ) -> list[AttendShow]:
-    attends = await db.execute(select(Attends).where(Attends.id == current_user.id))
+    attends = await db.execute(select(Attends).where(Attends.user_id == current_user.id))
     attends = attends.scalars().all()
     attends_show = []
     if len(attends) > 0:
@@ -442,6 +442,6 @@ async def get_attends_by_id(
     else:
         raise HTTPException(status_code=404, detail="Attends not found")
 
-        if not attends:
-            raise HTTPException(status_code=404, detail="Attends not found")
-        return attends_show
+    if not attends:
+        raise HTTPException(status_code=404, detail="Attends not found")
+    return attends_show

@@ -55,7 +55,7 @@ async def create_user(obj: UserCreate, db: AsyncSession = Depends(get_db)) -> Us
     """
     user = await db.execute(
         select(User).where(
-            User.name == obj.name, User.birthday_date == obj.birthday_date
+            User.name == str(obj.name), User.birthday_date == obj.birthday_date
         )
     )
     user = user.scalars().first()
