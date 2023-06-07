@@ -1,3 +1,4 @@
+import datetime
 from datetime import timedelta
 from random import randint
 
@@ -28,6 +29,16 @@ user_router = APIRouter()
 # Retrieve the updated user from the database    return result.scalar_one()
 async def get_id():
     return randint(100000000, 900000000)
+
+
+async def validate_date(date_text):
+    try:
+        datetime.date.fromisoformat(date_text)
+        return
+    except ValueError:
+        raise HTTPException(
+            status_code=400, detail="Incorrect data format, should be YYYY-MM-DD"
+        )
 
 
 @user_router.post("/create_user")
@@ -61,6 +72,7 @@ async def create_user(obj: UserCreate, db: AsyncSession = Depends(get_db)) -> Us
     user = user.scalars().first()
     if user:
         raise HTTPException(status_code=409, detail="User already exists")
+    await validate_date(obj.birthday_date)
     new_user = User(
         id=await get_id(),
         name=str(obj.name),

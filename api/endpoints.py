@@ -66,12 +66,12 @@ async def calculate_time_to_walk(coordinate_place, address):
     try:
         routes = distance_matrix(client, coord, profile="foot-walking")
     except:
-        return 1000
+        return 42
     time = routes.get("durations")[0][1]
     if time:
         return int(time) / 60
     else:
-        return 480
+        return 48
 
 
 async def get_group_from_db(group_id: int, session: AsyncSession) -> Groups:
@@ -232,6 +232,8 @@ async def give_recs_for_new_users(
     list[int]
         A list of integer identifiers for the recommended groups.
     """
+    if current_user.survey_result is None:
+        raise HTTPException(status_code=400, detail="No survey results")
     now_interests = ast.literal_eval(current_user.survey_result)
     metro = get_metro(current_user.address)
     if metro == "далековато":
