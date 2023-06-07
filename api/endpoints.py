@@ -375,10 +375,10 @@ async def create_attend(
         direction_3=group.direction_3,
         Offline=False if group.closest_metro == "Онлайн" else True,
         date=await get_date(),
-        start=group.schedule_planned,
-        end=await calculate_time_to_walk(
+        start=group.schedule_closed,
+        end=str(await calculate_time_to_walk(
             group.coordinates_of_address, current_user.address
-        ),
+        )) if group.coordinates_of_address else 0,
         metro=group.closest_metro,
         address=group.address,
     )
