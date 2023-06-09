@@ -327,6 +327,11 @@ async def create_attend(
     )
     if existing_attend:
         raise HTTPException(status_code=400, detail="Attendance record already exists.")
+
+    routes = pelias_search(client, current_user.address, country="RUS")
+    final_coords = routes.get("features")[0].get("geometry").get("coordinates")[::-1]
+    coordinates_user = (final_coords[0], final_coords[1])
+
     group = await get_group_from_db(group_id=group_id, session=db)
     db_attends = Attends(
         id=await get_id(),
@@ -339,7 +344,7 @@ async def create_attend(
         start=group.schedule_closed,
         end=str(
             await calculate_time_to_walk(
-                group.coordinates_of_address, current_user.address
+                group.coordinates_of_address, coordinates_user
             )
         )
         if group.coordinates_of_address
