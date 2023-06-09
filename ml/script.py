@@ -75,7 +75,8 @@ class Predictor:
             return sparse.csr_matrix((data, (row_indices, col_indices)), shape=(1))
 
     async def get_recs(
-        self, N,
+        self,
+        N,
         user_id: int | None = None,
     ) -> np.array:
         """
@@ -99,7 +100,9 @@ class Predictor:
         )[0]
         als_rec = als_rec[~np.in1d(als_rec, nn_rec)]
 
-        return [self.encoder.to_group_id(i) for i in np.concatenate([nn_rec, als_rec])][:N]
+        return [self.encoder.to_group_id(i) for i in np.concatenate([nn_rec, als_rec])][
+            :N
+        ]
 
 
 def get_model(path) -> implicit.als.AlternatingLeastSquares:
@@ -175,7 +178,4 @@ async def get_final_groups(chat_id: int, metro_human=None):
             .tolist()
         )
 
-    return (
-        offline_groups[:5]
-        + online_groups[:5]
-    )
+    return offline_groups[:5] + online_groups[:5]

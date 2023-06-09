@@ -2,10 +2,8 @@ import re
 from enum import Enum
 from typing import List
 
-from fastapi import HTTPException
 from pydantic import BaseModel
 from pydantic import Field
-from pydantic import validator
 
 LETTER_MATCH_PATTERN = re.compile(r"^[а-яА-Яa-zA-Z\-]+$")
 
