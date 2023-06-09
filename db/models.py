@@ -39,6 +39,7 @@ class Groups(Base):
     closest_metro = Column(String)
     coordinates_of_address = Column(String)
     around_metros = Column(String)
+    description = Column(String)
 
 
 class Attends(Base):

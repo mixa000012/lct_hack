@@ -58,6 +58,7 @@ class GroupInDB(BaseModel):
     address: str
     metro: str | None
     time: List[str] | str
+    description: str
 
 
 class Group(GroupInDB):
