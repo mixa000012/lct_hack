@@ -12,3 +12,4 @@ envparse
 asyncpg
 implicit
 python-multipart
+starlette
