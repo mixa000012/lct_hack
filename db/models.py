@@ -21,6 +21,7 @@ class User(Base):
     birthday_date = Column(String)
     address = Column(String)
     survey_result = Column(String)
+    ml_result = Column(String)
 
 
 class Groups(Base):

@@ -149,7 +149,7 @@ groups_metros = pd.read_csv("ml/groups_metros.csv")
 
 
 async def get_final_groups(chat_id: int, metro_human=None):
-    groups = await get_recs(chat_id=chat_id, N=6000)
+    groups = await get_recs(chat_id=chat_id, N=3000)
     groups_list = groups
     groups_metros_df = pd.DataFrame({"unique_group_id": groups_list})
     groups_metros_df = groups_metros_df.merge(

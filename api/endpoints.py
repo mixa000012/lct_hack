@@ -5,6 +5,7 @@ from math import cos
 from math import radians
 from math import sin
 from math import sqrt
+from sqlalchemy import update
 import openrouteservice
 from fastapi import APIRouter
 from fastapi import Depends
@@ -60,7 +61,7 @@ async def calculate_distance(lat1, lon1, lat2, lon2):
     return R * c
 
 
-async def calculate_time_to_walk(coordinate_place, address):
+async def calculate_time_to_walk(coordinate_place, coordinates_user):
     """
     Asynchronously calculates the estimated time in minutes to walk from a given address to a place specified
     by its coordinates. Utilizes the OpenRouteService's distance matrix API.
@@ -79,9 +80,6 @@ async def calculate_time_to_walk(coordinate_place, address):
         Estimated walking time from current location to the place. Defaults to 480 minutes if unable to calculate,
         or 1000 minutes if an API call error occurs.
     """
-    routes = pelias_search(client, address, country="RUS")
-    final_coords = routes.get("features")[0].get("geometry").get("coordinates")[::-1]
-    coordinates_user = (final_coords[0], final_coords[1])
     coordinates = ast.literal_eval(coordinate_place)
     coord = (coordinates_user, coordinates)
     try:
@@ -148,11 +146,14 @@ async def read_group(
             group = Group(**group_in_db.dict(), timeToWalk=0)
             groups.append(group)
         else:
+            routes = pelias_search(client, current_user.address, country="RUS")
+            final_coords = routes.get("features")[0].get("geometry").get("coordinates")[::-1]
+            coordinates_user = (final_coords[0], final_coords[1])
             group = Group(
                 **group_in_db.dict(),
                 # timeToWalk=1000
                 timeToWalk=await calculate_time_to_walk(
-                    group.coordinates_of_address, current_user.address
+                    group.coordinates_of_address, coordinates_user
                 )
             )
             groups.append(group)
@@ -218,7 +219,8 @@ async def get_address(coordinates: str) -> dict:
 
 @recs_router.get("/")
 async def give_recs(
-        current_user: User = Depends(get_current_user_from_token),
+        current_user: User = Depends(get_current_user_from_token), db: AsyncSession = Depends(get_db),
+        is_new: bool = False
 ) -> list[int]:
     """
     Asynchronously generates recommendations for the current user based on their user data.
@@ -234,37 +236,34 @@ async def give_recs(
     list[int]
         A list of integer identifiers for the recommended groups.
     """
-    result = await get_recs(int(current_user.id), N=12)
-    return result
+    if current_user.ml_result:
+        result = current_user.ml_result
+        return ast.literal_eval(result)
 
+    if is_new:
+        if current_user.survey_result is None:
+            raise HTTPException(status_code=400, detail="No survey results")
+        now_interests = ast.literal_eval(current_user.survey_result)
+        metro = get_metro(current_user.address)
+        if metro == "далековато":
+            metro = "Ленинский проспект"
 
-@recs_router.post("/new")
-async def give_recs_for_new_users(
-        current_user: User = Depends(get_current_user_from_token),
-) -> list[int]:
-    """
-    Asynchronously generates recommendations for new users based on their survey results and other data.
-    Utilizes a machine learning function `get_new_recs` for generating the recommendations.
+        result = get_new_resc(now_interests, current_user.sex, current_user.birthday_date)
+        result = await get_final_groups(chat_id=int(result), metro_human=metro)
+    else:
+        result = await get_recs(int(current_user.id), N=12)
 
-    Parameters:
-    ------------
-    current_user: User
-        The User object representing the current user. Injected by FastAPI's dependency injection system.
+    stmt = (
+        update(User)
+        .where(User.id == current_user.id)
+        .values(
+            ml_result=str(result)
+        )
+    )
+    await db.execute(stmt)
+    await db.commit()
 
-    Returns:
-    ------------
-    list[int]
-        A list of integer identifiers for the recommended groups.
-    """
-    if current_user.survey_result is None:
-        raise HTTPException(status_code=400, detail="No survey results")
-    now_interests = ast.literal_eval(current_user.survey_result)
-    metro = get_metro(current_user.address)
-    if metro == "далековато":
-        metro = "Ленинский проспект"
-
-    result = get_new_resc(now_interests, current_user.sex, current_user.birthday_date)
-    result = await get_final_groups(chat_id=int(result), metro_human=metro)
+    # Retrieve the updated user from the database
     return result
 
 
@@ -401,7 +400,7 @@ async def create_attend(
         start=group.schedule_closed,
         end=str(await calculate_time_to_walk(
             group.coordinates_of_address, current_user.address
-        )) if group.coordinates_of_address else str(0),
+        )) if group.coordinates_of_address else '0',
         metro=group.closest_metro,
         address=group.address,
     )
