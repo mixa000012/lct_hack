@@ -161,13 +161,6 @@ async def read_group(
     return groups
 
 
-@routes_router.post("/get_time")
-async def get_time(coordinates: str) -> dict:
-    coordinates = ast.literal_eval(coordinates)
-    routes = distance_matrix(client, coordinates, profile="foot-walking")
-    return routes
-
-
 @routes_router.get("/suggest")
 async def suggest(query: str) -> list[str]:
     """
@@ -283,67 +276,13 @@ async def is_recs_exist(
         Returns True if recommendations for the current user exist; otherwise, it returns False.
     """
     if current_user.survey_result:
+        print(current_user.survey_result)
         return True
     try:
         await get_recs(int(current_user.id), N=10)
         return True
     except KeyError:
         return False
-
-
-@groups_router.get("/group")
-async def get_group(
-        group_name: str,
-        current_user: User = Depends(get_current_user_from_token),
-        db: AsyncSession = Depends(get_db),
-) -> list[Group]:
-    """
-    Asynchronously retrieves a list of Group objects that match the provided group name. It also includes
-    an estimated walking time from the current user's location to each group's location.
-
-    Parameters:
-    ------------
-    group_name: str
-        Name of the group to be retrieved.
-
-    current_user: User
-        The User object representing the current user. Injected by FastAPI's dependency injection system.
-
-    db: AsyncSession
-        An asynchronous SQLAlchemy session for database operations. Injected by FastAPI's dependency injection system.
-
-    Returns:
-    ------------
-    list[Group]
-        A list of Group objects corresponding to the provided group name.
-    """
-    groups = []
-    result = await db.execute(select(Groups).where(Groups.direction_3 == group_name))
-    result = result.scalars().all()[::6]
-    for group in result:
-        group_in_db = GroupInDB(
-            id=group.id,
-            name=group.direction_3,
-            type=group.direction_1,
-            address=group.address,
-            metro=group.closest_metro,
-            time=group.schedule_active
-            if len(group.schedule_active) > 0
-            else group.schedule_closed,
-        )
-        if group.closest_metro == "Онлайн":
-            group = Group(**group_in_db.dict(), timeToWalk=0)
-            groups.append(group)
-        else:
-            group = Group(
-                **group_in_db.dict(),
-                # timeToWalk=1000
-                timeToWalk=await calculate_time_to_walk(
-                    group.coordinates_of_address, current_user.address
-                )
-            )
-            groups.append(group)
-    return groups
 
 
 async def get_date():
