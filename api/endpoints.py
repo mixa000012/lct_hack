@@ -5,7 +5,7 @@ from math import cos
 from math import radians
 from math import sin
 from math import sqrt
-from sqlalchemy import update
+
 import openrouteservice
 from fastapi import APIRouter
 from fastapi import Depends
@@ -15,6 +15,7 @@ from openrouteservice.geocode import pelias_autocomplete
 from openrouteservice.geocode import pelias_reverse
 from openrouteservice.geocode import pelias_search
 from sqlalchemy import select
+from sqlalchemy import update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.actions.auth import get_current_user_from_token
@@ -83,7 +84,9 @@ async def calculate_time_to_walk(coordinate_place, coordinates_user):
     coordinates = ast.literal_eval(coordinate_place)
     coord = (coordinates_user, coordinates)
     try:
-        dist = await calculate_distance(coord[0][0], coord[0][1], coord[1][0], coord[1][1])
+        dist = await calculate_distance(
+            coord[0][0], coord[0][1], coord[1][0], coord[1][1]
+        )
         # print(coord[0][0], coord[0][1], coord[1][0], coord[1][1])
         # print('fsdfdsfsdfsdfsdfsd')
         # print(dist)
@@ -104,9 +107,9 @@ async def get_group_from_db(group_id: int, session: AsyncSession) -> Groups:
 
 @groups_router.post("/groups")
 async def read_group(
-        group_id: list[int],
-        db: AsyncSession = Depends(get_db),
-        current_user: User = Depends(get_current_user_from_token),
+    group_id: list[int],
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user_from_token),
 ) -> list[Group]:
     """
     Asynchronously retrieves a list of Group objects specified by their IDs. The returned Group objects also include
@@ -129,7 +132,9 @@ async def read_group(
         A list of Group objects corresponding to the provided IDs.
     """
     groups = []
-
+    routes = pelias_search(client, current_user.address, country="RUS")
+    final_coords = routes.get("features")[0].get("geometry").get("coordinates")[::-1]
+    coordinates_user = (final_coords[0], final_coords[1])
     for i in group_id:
         group = await get_group_from_db(i, db)
         group_in_db = GroupInDB(
@@ -146,12 +151,8 @@ async def read_group(
             group = Group(**group_in_db.dict(), timeToWalk=0)
             groups.append(group)
         else:
-            routes = pelias_search(client, current_user.address, country="RUS")
-            final_coords = routes.get("features")[0].get("geometry").get("coordinates")[::-1]
-            coordinates_user = (final_coords[0], final_coords[1])
             group = Group(
                 **group_in_db.dict(),
-                # timeToWalk=1000
                 timeToWalk=await calculate_time_to_walk(
                     group.coordinates_of_address, coordinates_user
                 )
@@ -219,8 +220,9 @@ async def get_address(coordinates: str) -> dict:
 
 @recs_router.get("/")
 async def give_recs(
-        current_user: User = Depends(get_current_user_from_token), db: AsyncSession = Depends(get_db),
-        is_new: bool = False
+    current_user: User = Depends(get_current_user_from_token),
+    db: AsyncSession = Depends(get_db),
+    is_new: bool = False,
 ) -> list[int]:
     """
     Asynchronously generates recommendations for the current user based on their user data.
@@ -248,18 +250,14 @@ async def give_recs(
         if metro == "далековато":
             metro = "Ленинский проспект"
 
-        result = get_new_resc(now_interests, current_user.sex, current_user.birthday_date)
+        result = get_new_resc(
+            now_interests, current_user.sex, current_user.birthday_date
+        )
         result = await get_final_groups(chat_id=int(result), metro_human=metro)
     else:
         result = await get_recs(int(current_user.id), N=12)
 
-    stmt = (
-        update(User)
-        .where(User.id == current_user.id)
-        .values(
-            ml_result=str(result)
-        )
-    )
+    stmt = update(User).where(User.id == current_user.id).values(ml_result=str(result))
     await db.execute(stmt)
     await db.commit()
 
@@ -269,7 +267,7 @@ async def give_recs(
 
 @recs_router.get("/is_exist")
 async def is_exist_recs(
-        current_user: User = Depends(get_current_user_from_token),
+    current_user: User = Depends(get_current_user_from_token),
 ) -> bool:
     """
     Asynchronously checks if the current user has any recommendations available.
@@ -293,9 +291,9 @@ async def is_exist_recs(
 
 @groups_router.get("/group")
 async def get_group(
-        group_name: str,
-        current_user: User = Depends(get_current_user_from_token),
-        db: AsyncSession = Depends(get_db),
+    group_name: str,
+    current_user: User = Depends(get_current_user_from_token),
+    db: AsyncSession = Depends(get_db),
 ) -> list[Group]:
     """
     Asynchronously retrieves a list of Group objects that match the provided group name. It also includes
@@ -360,9 +358,9 @@ async def check_attend(group_id: int, user_id: int, db):
 
 @groups_router.post("/attends")
 async def create_attend(
-        group_id: int,
-        current_user: User = Depends(get_current_user_from_token),
-        db: AsyncSession = Depends(get_db),
+    group_id: int,
+    current_user: User = Depends(get_current_user_from_token),
+    db: AsyncSession = Depends(get_db),
 ):
     """
     Asynchronously creates an attendance record for the current user for a specified group.
@@ -398,9 +396,13 @@ async def create_attend(
         Offline=False if group.closest_metro == "Онлайн" else True,
         date=await get_date(),
         start=group.schedule_closed,
-        end=str(await calculate_time_to_walk(
-            group.coordinates_of_address, current_user.address
-        )) if group.coordinates_of_address else '0',
+        end=str(
+            await calculate_time_to_walk(
+                group.coordinates_of_address, current_user.address
+            )
+        )
+        if group.coordinates_of_address
+        else "0",
         metro=group.closest_metro,
         address=group.address,
     )
@@ -424,9 +426,9 @@ async def create_attend(
 
 @groups_router.delete("/attends/{id}")
 async def delete_attends(
-        id: int,
-        db: AsyncSession = Depends(get_db),
-        current_user: User = Depends(get_current_user_from_token),
+    id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user_from_token),
 ):
     """
     Asynchronously deletes an attendance record specified by its identifier.
@@ -461,8 +463,8 @@ async def delete_attends(
 
 @groups_router.get("/attends_user")
 async def get_attends_by_id(
-        current_user: User = Depends(get_current_user_from_token),
-        db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user_from_token),
+    db: AsyncSession = Depends(get_db),
 ) -> list[AttendShow]:
     attends = await db.execute(
         select(Attends).where(Attends.user_id == current_user.id)
