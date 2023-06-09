@@ -265,8 +265,8 @@ async def give_recs(
     return result
 
 
-@recs_router.get("/is_exist")
-async def is_exist_recs(
+@recs_router.get("/is_recs_exist")
+async def is_recs_exist(
     current_user: User = Depends(get_current_user_from_token),
 ) -> bool:
     """
@@ -282,6 +282,8 @@ async def is_exist_recs(
     bool
         Returns True if recommendations for the current user exist; otherwise, it returns False.
     """
+    if current_user.survey_result:
+        return True
     try:
         await get_recs(int(current_user.id), N=10)
         return True
