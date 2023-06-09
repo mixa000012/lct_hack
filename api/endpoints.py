@@ -1,7 +1,10 @@
 import ast
 from datetime import datetime
-from random import randint
-
+from math import atan2
+from math import cos
+from math import radians
+from math import sin
+from math import sqrt
 import openrouteservice
 from fastapi import APIRouter
 from fastapi import Depends
@@ -40,6 +43,23 @@ client = openrouteservice.Client(
 )  # Specify your personal API key
 
 
+async def calculate_distance(lat1, lon1, lat2, lon2):
+    R = 6371.0  # radius of Earth in km
+
+    lat1_radians = radians(lat1)
+    lon1_radians = radians(lon1)
+    lat2_radians = radians(lat2)
+    lon2_radians = radians(lon2)
+
+    dlon = lon2_radians - lon1_radians
+    dlat = lat2_radians - lat1_radians
+
+    a = sin(dlat / 2) ** 2 + cos(lat1_radians) * cos(lat2_radians) * sin(dlon / 2) ** 2
+    c = 2 * atan2(sqrt(a), sqrt(1 - a))
+
+    return R * c
+
+
 async def calculate_time_to_walk(coordinate_place, address):
     """
     Asynchronously calculates the estimated time in minutes to walk from a given address to a place specified
@@ -65,14 +85,17 @@ async def calculate_time_to_walk(coordinate_place, address):
     coordinates = ast.literal_eval(coordinate_place)
     coord = (coordinates_user, coordinates)
     try:
-        routes = distance_matrix(client, coord, profile="foot-walking")
+        dist = await calculate_distance(coord[0][0], coord[0][1], coord[1][0], coord[1][1])
+        # print(coord[0][0], coord[0][1], coord[1][0], coord[1][1])
+        # print('fsdfdsfsdfsdfsdfsd')
+        # print(dist)
     except:
-        return randint(40, 69)
-    time = routes.get("durations")[0][1]
-    if time:
-        return int(time) / 60
+        return 500
+    # time = routes.get("durations")[0][1]
+    if dist:
+        return int((dist / 3) * 60)
     else:
-        return randint(30, 50)
+        return 1000
 
 
 async def get_group_from_db(group_id: int, session: AsyncSession) -> Groups:
@@ -378,7 +401,7 @@ async def create_attend(
         start=group.schedule_closed,
         end=str(await calculate_time_to_walk(
             group.coordinates_of_address, current_user.address
-        )) if group.coordinates_of_address else 0,
+        )) if group.coordinates_of_address else str(0),
         metro=group.closest_metro,
         address=group.address,
     )
