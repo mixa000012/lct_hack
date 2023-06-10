@@ -106,9 +106,9 @@ async def get_group_from_db(group_id: int, session: AsyncSession) -> Groups:
 
 @groups_router.post("/groups")
 async def read_group(
-    group_id: list[int],
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user_from_token),
+        group_id: list[int],
+        db: AsyncSession = Depends(get_db),
+        current_user: User = Depends(get_current_user_from_token),
 ) -> list[Group]:
     """
     Asynchronously retrieves a list of Group objects specified by their IDs. The returned Group objects also include
@@ -162,14 +162,15 @@ async def read_group(
                 ),
             )
             groups.append(group)
+    groups = sorted(groups, key=lambda x: (x.timeToWalk == 0, x.timeToWalk))
     return groups
 
 
 @groups_router.post("/group")
 async def get_group(
-    group_name: str,
-    current_user: User = Depends(get_current_user_from_token),
-    db: AsyncSession = Depends(get_db),
+        group_name: str,
+        current_user: User = Depends(get_current_user_from_token),
+        db: AsyncSession = Depends(get_db),
 ) -> list[Group]:
     """
     Asynchronously retrieves a list of Group objects specified by their IDs. The returned Group objects also include
@@ -281,9 +282,9 @@ async def get_address(coordinates: str) -> dict:
 
 @recs_router.get("/")
 async def give_recs(
-    current_user: User = Depends(get_current_user_from_token),
-    db: AsyncSession = Depends(get_db),
-    is_new: bool = False,
+        current_user: User = Depends(get_current_user_from_token),
+        db: AsyncSession = Depends(get_db),
+        is_new: bool = False,
 ) -> list[int]:
     """
     Asynchronously generates recommendations for the current user based on their user data.
@@ -328,7 +329,7 @@ async def give_recs(
 
 @recs_router.get("/is_recs_exist")
 async def is_recs_exist(
-    current_user: User = Depends(get_current_user_from_token),
+        current_user: User = Depends(get_current_user_from_token),
 ) -> bool:
     """
     Asynchronously checks if the current user has any recommendations available.
@@ -367,9 +368,9 @@ async def check_attend(group_id: int, user_id: int, db):
 
 @groups_router.post("/attends")
 async def create_attend(
-    group_id: int,
-    current_user: User = Depends(get_current_user_from_token),
-    db: AsyncSession = Depends(get_db),
+        group_id: int,
+        current_user: User = Depends(get_current_user_from_token),
+        db: AsyncSession = Depends(get_db),
 ):
     """
     Asynchronously creates an attendance record for the current user for a specified group.
@@ -438,9 +439,9 @@ async def create_attend(
 
 @groups_router.delete("/attends/{id}")
 async def delete_attends(
-    id: int,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user_from_token),
+        id: int,
+        db: AsyncSession = Depends(get_db),
+        current_user: User = Depends(get_current_user_from_token),
 ):
     """
     Asynchronously deletes an attendance record specified by its identifier.
@@ -475,8 +476,8 @@ async def delete_attends(
 
 @groups_router.get("/attends_user")
 async def get_attends_by_id(
-    current_user: User = Depends(get_current_user_from_token),
-    db: AsyncSession = Depends(get_db),
+        current_user: User = Depends(get_current_user_from_token),
+        db: AsyncSession = Depends(get_db),
 ) -> list[AttendShow]:
     attends = await db.execute(
         select(Attends).where(Attends.user_id == current_user.id)
