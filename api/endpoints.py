@@ -106,9 +106,9 @@ async def get_group_from_db(group_id: int, session: AsyncSession) -> Groups:
 
 @groups_router.post("/groups")
 async def read_group(
-        group_id: list[int],
-        db: AsyncSession = Depends(get_db),
-        current_user: User = Depends(get_current_user_from_token),
+    group_id: list[int],
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user_from_token),
 ) -> list[Group]:
     """
     Asynchronously retrieves a list of Group objects specified by their IDs. The returned Group objects also include
@@ -131,8 +131,8 @@ async def read_group(
         A list of Group objects corresponding to the provided IDs.
     """
     groups = []
-    if 'Moscow, MS, Russia' not in current_user.address:
-        address = f'{current_user.address}, Moscow, MS, Russia'
+    if "Moscow, MS, Russia" not in current_user.address:
+        address = f"{current_user.address}, Moscow, MS, Russia"
     else:
         address = current_user.address
     routes = pelias_search(client, address, country="RUS")
@@ -149,7 +149,7 @@ async def read_group(
             time=group.schedule_active
             if len(group.schedule_active) > 0
             else group.schedule_closed,
-            description=group.description
+            description=group.description,
         )
         if group.closest_metro == "Онлайн":
             group = Group(**group_in_db.dict(), timeToWalk=0)
@@ -159,7 +159,7 @@ async def read_group(
                 **group_in_db.dict(),
                 timeToWalk=await calculate_time_to_walk(
                     group.coordinates_of_address, coordinates_user
-                )
+                ),
             )
             groups.append(group)
     return groups
@@ -167,9 +167,9 @@ async def read_group(
 
 @groups_router.post("/group")
 async def get_group(
-        group_name: str,
-        current_user: User = Depends(get_current_user_from_token),
-        db: AsyncSession = Depends(get_db),
+    group_name: str,
+    current_user: User = Depends(get_current_user_from_token),
+    db: AsyncSession = Depends(get_db),
 ) -> list[Group]:
     """
     Asynchronously retrieves a list of Group objects specified by their IDs. The returned Group objects also include
@@ -192,8 +192,8 @@ async def get_group(
         A list of Group objects corresponding to the provided IDs.
     """
     groups = []
-    if 'Moscow, MS, Russia' not in current_user.address:
-        address = f'{current_user.address}, Moscow, MS, Russia'
+    if "Moscow, MS, Russia" not in current_user.address:
+        address = f"{current_user.address}, Moscow, MS, Russia"
     else:
         address = current_user.address
     routes = pelias_search(client, address, country="RUS")
@@ -202,7 +202,7 @@ async def get_group(
 
     group_name = group_name.title()
     result = await db.execute(select(Groups).where(Groups.direction_3 == group_name))
-    result = result.scalars().all()[:6]
+    result = result.scalars().all()[:12]
     for group in result:
         group_in_db = GroupInDB(
             id=group.id,
@@ -213,7 +213,7 @@ async def get_group(
             time=group.schedule_active
             if len(group.schedule_active) > 0
             else group.schedule_closed,
-            description=group.description
+            description=group.description,
         )
         if group.closest_metro == "Онлайн":
             group = Group(**group_in_db.dict(), timeToWalk=0)
@@ -223,7 +223,7 @@ async def get_group(
                 **group_in_db.dict(),
                 timeToWalk=await calculate_time_to_walk(
                     group.coordinates_of_address, coordinates_user
-                )
+                ),
             )
             groups.append(group)
     return groups
@@ -281,9 +281,9 @@ async def get_address(coordinates: str) -> dict:
 
 @recs_router.get("/")
 async def give_recs(
-        current_user: User = Depends(get_current_user_from_token),
-        db: AsyncSession = Depends(get_db),
-        is_new: bool = False,
+    current_user: User = Depends(get_current_user_from_token),
+    db: AsyncSession = Depends(get_db),
+    is_new: bool = False,
 ) -> list[int]:
     """
     Asynchronously generates recommendations for the current user based on their user data.
@@ -328,7 +328,7 @@ async def give_recs(
 
 @recs_router.get("/is_recs_exist")
 async def is_recs_exist(
-        current_user: User = Depends(get_current_user_from_token),
+    current_user: User = Depends(get_current_user_from_token),
 ) -> bool:
     """
     Asynchronously checks if the current user has any recommendations available.
@@ -367,9 +367,9 @@ async def check_attend(group_id: int, user_id: int, db):
 
 @groups_router.post("/attends")
 async def create_attend(
-        group_id: int,
-        current_user: User = Depends(get_current_user_from_token),
-        db: AsyncSession = Depends(get_db),
+    group_id: int,
+    current_user: User = Depends(get_current_user_from_token),
+    db: AsyncSession = Depends(get_db),
 ):
     """
     Asynchronously creates an attendance record for the current user for a specified group.
@@ -438,9 +438,9 @@ async def create_attend(
 
 @groups_router.delete("/attends/{id}")
 async def delete_attends(
-        id: int,
-        db: AsyncSession = Depends(get_db),
-        current_user: User = Depends(get_current_user_from_token),
+    id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user_from_token),
 ):
     """
     Asynchronously deletes an attendance record specified by its identifier.
@@ -475,8 +475,8 @@ async def delete_attends(
 
 @groups_router.get("/attends_user")
 async def get_attends_by_id(
-        current_user: User = Depends(get_current_user_from_token),
-        db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user_from_token),
+    db: AsyncSession = Depends(get_db),
 ) -> list[AttendShow]:
     attends = await db.execute(
         select(Attends).where(Attends.user_id == current_user.id)
