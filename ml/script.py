@@ -7,29 +7,27 @@ import scipy.sparse as sparse
 
 
 class Encoder:
-    def __init__(self, unique_groups: np.ndarray, unique_users: np.ndarray):
+    def __init__(self, unique_groups, unique_users):
         self.group_dict = dict(
             zip(unique_groups, np.arange(unique_groups.shape[0], dtype=np.int32))
         )
         self.user_dict = dict(
             zip(unique_users, np.arange(unique_users.shape[0], dtype=np.int32))
         )
+        self.reverse_user_dict = dict((v, k) for k, v in self.user_dict.items())
+        self.reverse_group_dict = dict((v, k) for k, v in self.group_dict.items())
 
-    def get_user_dict(self) -> dict:
+    def get_user_dict(self):
         return self.user_dict
 
-    def get_group_dict(self) -> dict:
+    def get_group_dict(self):
         return self.group_dict
 
-    def to_user_id(self, ind) -> str:
-        for key, value in self.user_dict.items():
-            if value == ind:
-                return key
+    def to_user_id(self, ind):
+        return self.reverse_user_dict[ind]
 
-    def to_group_id(self, ind) -> str:
-        for key, value in self.group_dict.items():
-            if value == ind:
-                return key
+    def to_group_id(self, ind):
+        return self.reverse_group_dict[ind]
 
 
 class Predictor:
