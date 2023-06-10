@@ -317,7 +317,7 @@ async def give_recs(
         )
         result = await get_final_groups(chat_id=int(result), metro_human=metro)
     else:
-        result = await get_recs(int(current_user.id), N=12)
+        result = await get_recs(int(current_user.id), N=12, new_user=False)
 
     stmt = update(User).where(User.id == current_user.id).values(ml_result=str(result))
     await db.execute(stmt)
@@ -348,7 +348,7 @@ async def is_recs_exist(
         print(current_user.survey_result)
         return True
     try:
-        await get_recs(int(current_user.id), N=10)
+        await get_recs(int(current_user.id), N=10, new_user=False)
         return True
     except KeyError:
         return False

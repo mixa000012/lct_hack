@@ -32,11 +32,11 @@ class Encoder:
 
 class Predictor:
     def __init__(
-        self,
-        encoder: Encoder,
-        sparse_user_group: sparse.csr,
-        als_model: implicit.als.AlternatingLeastSquares,
-        nn_model: implicit.nearest_neighbours.CosineRecommender,
+            self,
+            encoder: Encoder,
+            sparse_user_group: sparse.csr,
+            als_model: implicit.als.AlternatingLeastSquares,
+            nn_model: implicit.nearest_neighbours.CosineRecommender,
     ) -> None:
         self.encoder = encoder
         self.model = als_model
@@ -45,7 +45,7 @@ class Predictor:
         self.als_model = als_model
 
     def user_to_sparce(
-        self, user_id: int | None = None, user_data: pd.DataFrame | None = None
+            self, user_id: int | None = None, user_data: pd.DataFrame | None = None
     ) -> sparse.csr_matrix:
         """
         user_ind (int) подается, как id юзера в изначальной табличке
@@ -73,9 +73,9 @@ class Predictor:
             return sparse.csr_matrix((data, (row_indices, col_indices)), shape=(1))
 
     async def get_recs(
-        self,
-        N,
-        user_id: int | None = None,
+            self,
+            N,
+            user_id: int | None = None, new_user: bool = False
     ) -> np.array:
         """
         user_id (int) - это id юзера, представленный в attend.csv
@@ -98,9 +98,19 @@ class Predictor:
         )[0]
         als_rec = als_rec[~np.in1d(als_rec, nn_rec)]
 
-        return [self.encoder.to_group_id(i) for i in np.concatenate([nn_rec, als_rec])][
-            :N
-        ]
+        if not new_user:
+            list_of_groups = pd.read_csv("ml/list_of_groups.csv", header=None)
+            list_of_groups = list_of_groups.rename(columns={0: 'groups'})
+
+            nn_rec = np.vectorize(self.encoder.to_group_id)(nn_rec)
+            als_rec = np.vectorize(self.encoder.to_group_id)(als_rec)
+            recs = np.concatenate([nn_rec, als_rec])
+            recs = recs[np.in1d(recs, list_of_groups.groups.values)]
+
+            return list(recs)[0:N]
+        else:
+            return [self.encoder.to_group_id(i) for i in np.concatenate([nn_rec, als_rec])][
+                   :N]
 
 
 def get_model(path) -> implicit.als.AlternatingLeastSquares:
@@ -140,8 +150,8 @@ def get_predictor():
 predictor = get_predictor()
 
 
-async def get_recs(chat_id: int, N):
-    result = await predictor.get_recs(user_id=chat_id, N=N)
+async def get_recs(chat_id: int, N, new_user: bool):
+    result = await predictor.get_recs(user_id=chat_id, N=N, new_user=new_user)
     return result
 
 
@@ -150,7 +160,7 @@ groups_metros = pd.read_csv("ml/groups_metros.csv")
 
 
 async def get_final_groups(chat_id: int, metro_human=None):
-    groups = await get_recs(chat_id=chat_id, N=3000)
+    groups = await get_recs(chat_id=chat_id, N=3000, new_user=True)
     groups_list = groups
     groups_metros_df = pd.DataFrame({"unique_group_id": groups_list})
     groups_metros_df = groups_metros_df.merge(
