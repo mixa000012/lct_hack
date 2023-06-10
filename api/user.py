@@ -88,7 +88,7 @@ async def create_user(obj: UserCreate, db: AsyncSession = Depends(get_db)) -> Us
 
 @user_router.post("/token")
 async def login_for_token(
-    form_data: OAuth2PasswordRequestForm = Depends(), db: AsyncSession = Depends(get_db)
+        form_data: OAuth2PasswordRequestForm = Depends(), db: AsyncSession = Depends(get_db)
 ) -> TokenData:
     """
     This endpoint is responsible for user authentication and token generation.
@@ -126,9 +126,9 @@ async def ping(current_user: User = Depends(get_current_user_from_token)):
 
 @user_router.put("/update_user")
 async def update_user(
-    current_user: User = Depends(get_current_user_from_token),
-    update_data: UserUpdateData = Body(...),
-    db: AsyncSession = Depends(get_db),
+        current_user: User = Depends(get_current_user_from_token),
+        update_data: UserUpdateData = Body(...),
+        db: AsyncSession = Depends(get_db),
 ) -> UserShowAddress:
     """
     This endpoint allows the update of the user's information.
@@ -141,6 +141,10 @@ async def update_user(
     - dict: A dictionary containing a success status and the updated user information.
     """
     # The below assumes that you have a function to update the user in your database
+    if update_data.sex not in ['Мужчина', 'Женщина']:
+        raise HTTPException(
+            status_code=400, detail="Wrong gender!"
+        )
     stmt = (
         update(User)
         .where(User.id == current_user.id)

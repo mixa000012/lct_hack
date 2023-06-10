@@ -131,13 +131,81 @@ async def read_group(
         A list of Group objects corresponding to the provided IDs.
     """
     groups = []
-    routes = pelias_search(client, current_user.address, country="RUS")
+    if 'Moscow, MS, Russia' not in current_user.address:
+        address = f'{current_user.address}, Moscow, MS, Russia'
+    else:
+        address = current_user.address
+    routes = pelias_search(client, address, country="RUS")
     final_coords = routes.get("features")[0].get("geometry").get("coordinates")[::-1]
     coordinates_user = (final_coords[0], final_coords[1])
     for i in group_id:
         group = await get_group_from_db(i, db)
         group_in_db = GroupInDB(
             id=i,
+            name=group.direction_3,
+            type=group.direction_1,
+            address=group.address,
+            metro=group.closest_metro,
+            time=group.schedule_active
+            if len(group.schedule_active) > 0
+            else group.schedule_closed,
+            description=group.description
+        )
+        if group.closest_metro == "Онлайн":
+            group = Group(**group_in_db.dict(), timeToWalk=0)
+            groups.append(group)
+        else:
+            group = Group(
+                **group_in_db.dict(),
+                timeToWalk=await calculate_time_to_walk(
+                    group.coordinates_of_address, coordinates_user
+                )
+            )
+            groups.append(group)
+    return groups
+
+
+@groups_router.post("/group")
+async def get_group(
+        group_name: str,
+        current_user: User = Depends(get_current_user_from_token),
+        db: AsyncSession = Depends(get_db),
+) -> list[Group]:
+    """
+    Asynchronously retrieves a list of Group objects specified by their IDs. The returned Group objects also include
+    an estimate of the walking time from the user's current location to each group's location.
+
+    Parameters:
+    ------------
+    group_id: list[int]
+        A list of integer identifiers for the groups to be retrieved.
+
+    db: AsyncSession
+        An asynchronous SQLAlchemy session for database operations. Injected by FastAPI's dependency injection system.
+
+    current_user: User
+        The User object representing the current user. Injected by FastAPI's dependency injection system.
+
+    Returns:
+    ------------
+    list[Group]
+        A list of Group objects corresponding to the provided IDs.
+    """
+    groups = []
+    if 'Moscow, MS, Russia' not in current_user.address:
+        address = f'{current_user.address}, Moscow, MS, Russia'
+    else:
+        address = current_user.address
+    routes = pelias_search(client, address, country="RUS")
+    final_coords = routes.get("features")[0].get("geometry").get("coordinates")[::-1]
+    coordinates_user = (final_coords[0], final_coords[1])
+
+    group_name = group_name.title()
+    result = await db.execute(select(Groups).where(Groups.direction_3 == group_name))
+    result = result.scalars().all()[:6]
+    for group in result:
+        group_in_db = GroupInDB(
+            id=group.id,
             name=group.direction_3,
             type=group.direction_1,
             address=group.address,
