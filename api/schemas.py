@@ -13,56 +13,8 @@ class TokenData(BaseModel):
     token_type: str
 
 
-class UserUpdateData(BaseModel):
-    sex: str | None
-    address: str | None
-    survey_result: str | None
 
 
-class UserCreate(BaseModel):
-    name: str | int
-    birthday_date: str
-
-
-class UserShow(BaseModel):
-    name: str
-    user_id: str
-    birthday_date: str
-
-
-class UserShowAddress(UserShow):
-    sex: str
-    address: str
-    created_at: str
-    survey_result: str
-
-
-class GroupType(str, Enum):
-    Game = "Game"
-    Education = "Education"
-    Singing = "Singing"
-    Painting = "Painting"
-    Intellectual = "Intellectual"
-    Theatre = "Theatre"
-    SilverUni = "SilverUni"
-    Trainings = "Trainings"
-    Dancing = "Dancing"
-    Creativity = "Creativity"
-    Physical = "Physical"
-
-
-class GroupInDB(BaseModel):
-    id: int
-    name: str
-    type: GroupType | str
-    address: str
-    metro: str | None
-    time: List[str] | str
-    description: str
-
-
-class Group(GroupInDB):
-    timeToWalk: int = Field(...)
 
 
 class AttendShow(BaseModel):

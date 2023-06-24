@@ -10,7 +10,7 @@ from openrouteservice.geocode import pelias_search
 
 coords = ((8.34234, 48.23424), (8.34423, 48.26424))
 client = openrouteservice.Client(
-    key="5b3ce3597851110001cf6248d4e646702ef148e5a55e272b239c23cb"
+    key="5b3ce3597851110001cf6248e59956f8c4ed49eaba496c73c34c7999"
 )  # Specify your personal API key
 #
 with open("./file.json", "r", encoding="utf-8") as f:
