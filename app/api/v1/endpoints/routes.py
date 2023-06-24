@@ -1,4 +1,5 @@
 import ast
+
 import openrouteservice
 from fastapi import APIRouter
 from openrouteservice.geocode import pelias_autocomplete
@@ -19,7 +20,7 @@ async def suggest(query: str) -> list[str]:
         for i in range(10):
             result = routes.get("features")[i].get("properties").get("name")
             results.append(result)
-    except:
+    except:  # noqa
         return results
 
     return results

@@ -1,13 +1,16 @@
 import ast
-import openrouteservice
-from typing import Tuple
 from math import atan2
 from math import cos
 from math import radians
 from math import sin
 from math import sqrt
-from app.groups.schema import GroupInDB, Group
+from typing import Tuple
+
+import openrouteservice
 from openrouteservice.geocode import pelias_search
+
+from app.groups.schema import Group
+from app.groups.schema import GroupInDB
 
 client = openrouteservice.Client(
     key="5b3ce3597851110001cf6248d849a8330bbd463fb95a896f83abd13f"
@@ -41,7 +44,7 @@ async def calculate_time_to_walk(coordinate_place, coordinates_user):
         # print(coord[0][0], coord[0][1], coord[1][0], coord[1][1])
         # print('fsdfdsfsdfsdfsdfsd')
         # print(dist)
-    except:
+    except:  # noqa
         return 500
     # time = routes.get("durations")[0][1]
     if dist:
@@ -59,7 +62,11 @@ async def get_coordinates(address: str) -> Tuple[float, float]:
 
 
 async def create_group_in_db(group) -> GroupInDB:
-    time = group.schedule_active if len(group.schedule_active) > 0 else group.schedule_closed
+    time = (
+        group.schedule_active
+        if len(group.schedule_active) > 0
+        else group.schedule_closed
+    )
     return GroupInDB(
         id=group.id,
         name=group.direction_3,
@@ -71,12 +78,15 @@ async def create_group_in_db(group) -> GroupInDB:
     )
 
 
-async def create_group_with_time_to_walk(group_in_db: GroupInDB, coordinates_of_address, coordinates_user,
-                                         closest_metro) -> Group:
+async def create_group_with_time_to_walk(
+    group_in_db: GroupInDB, coordinates_of_address, coordinates_user, closest_metro
+) -> Group:
     if closest_metro == "Онлайн":
         time_to_walk = 0
     else:
-        time_to_walk = await calculate_time_to_walk(coordinates_of_address, coordinates_user)
+        time_to_walk = await calculate_time_to_walk(
+            coordinates_of_address, coordinates_user
+        )
 
     group = Group(**group_in_db.dict(), timeToWalk=time_to_walk)
     return group

@@ -1,6 +1,7 @@
 from datetime import datetime
 from random import randint
 
+
 async def get_date():
     return datetime.now()
 

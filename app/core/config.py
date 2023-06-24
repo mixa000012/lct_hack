@@ -1,7 +1,10 @@
 import secrets
-from typing import Any, Dict
+from typing import Any
+from typing import Dict
 
-from pydantic import BaseSettings, PostgresDsn, validator
+from pydantic import BaseSettings
+from pydantic import PostgresDsn
+from pydantic import validator
 
 
 class Settings(BaseSettings):

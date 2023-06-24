@@ -3,11 +3,11 @@ import re
 import urllib.parse
 
 import aiohttp
+from db.models import Groups
+from db.session import engine
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from db.models import Groups
-from db.session import engine
 from geocoding.get_coords import find_closest_metro_async
 
 api_key = "5b3ce3597851110001cf6248d4e646702ef148e5a55e272b239c23cb"
@@ -64,7 +64,7 @@ async def update_group(group):
 async def fetch_all_groups():
     async with AsyncSession(engine) as session:
         result = await session.execute(
-            select(Groups).where(Groups.closest_metro == None)
+            select(Groups).where(Groups.closest_metro == None)  # noqa
         )
         groups = result.scalars().all()
         print(groups)

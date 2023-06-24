@@ -1,9 +1,8 @@
+from db.models import Groups
+from db.session import engine
 from sqlalchemy import text
 from sqlalchemy import update
 from sqlalchemy.ext.asyncio import AsyncSession
-
-from db.models import Groups
-from db.session import engine
 
 
 async def get_metros_for_addresses():

@@ -1,4 +1,9 @@
-from typing import Any, Dict, Generic, Type, TypeVar, Union
+from typing import Any
+from typing import Dict
+from typing import Generic
+from typing import Type
+from typing import TypeVar
+from typing import Union
 
 from fastapi.encoders import jsonable_encoder
 from pydantic import BaseModel

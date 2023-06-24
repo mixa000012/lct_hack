@@ -32,11 +32,11 @@ class Encoder:
 
 class Predictor:
     def __init__(
-            self,
-            encoder: Encoder,
-            sparse_user_group: sparse.csr,
-            als_model: implicit.als.AlternatingLeastSquares,
-            nn_model: implicit.nearest_neighbours.CosineRecommender,
+        self,
+        encoder: Encoder,
+        sparse_user_group: sparse.csr,
+        als_model: implicit.als.AlternatingLeastSquares,
+        nn_model: implicit.nearest_neighbours.CosineRecommender,
     ) -> None:
         self.encoder = encoder
         self.model = als_model
@@ -45,7 +45,7 @@ class Predictor:
         self.als_model = als_model
 
     def user_to_sparce(
-            self, user_id: int | None = None, user_data: pd.DataFrame | None = None
+        self, user_id: int | None = None, user_data: pd.DataFrame | None = None
     ) -> sparse.csr_matrix:
         """
         user_ind (int) подается, как id юзера в изначальной табличке
@@ -73,9 +73,7 @@ class Predictor:
             return sparse.csr_matrix((data, (row_indices, col_indices)), shape=(1))
 
     async def get_recs(
-            self,
-            N,
-            user_id: int | None = None, new_user: bool = False
+        self, N, user_id: int | None = None, new_user: bool = False
     ) -> np.array:
         """
         user_id (int) - это id юзера, представленный в attend.csv
@@ -100,7 +98,7 @@ class Predictor:
 
         if not new_user:
             list_of_groups = pd.read_csv("ml/list_of_groups.csv", header=None)
-            list_of_groups = list_of_groups.rename(columns={0: 'groups'})
+            list_of_groups = list_of_groups.rename(columns={0: "groups"})
 
             nn_rec = np.vectorize(self.encoder.to_group_id)(nn_rec)
             als_rec = np.vectorize(self.encoder.to_group_id)(als_rec)
@@ -109,8 +107,9 @@ class Predictor:
 
             return list(recs)[0:N]
         else:
-            return [self.encoder.to_group_id(i) for i in np.concatenate([nn_rec, als_rec])][
-                   :N]
+            return [
+                self.encoder.to_group_id(i) for i in np.concatenate([nn_rec, als_rec])
+            ][:N]
 
 
 def get_model(path) -> implicit.als.AlternatingLeastSquares:

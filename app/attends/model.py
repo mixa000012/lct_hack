@@ -1,8 +1,9 @@
+from sqlalchemy import Boolean
 from sqlalchemy import Column
 from sqlalchemy import DateTime
 from sqlalchemy import Integer
 from sqlalchemy import String
-from sqlalchemy import Boolean
+
 from app.core.db.base_class import Base
 
 

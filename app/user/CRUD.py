@@ -1,8 +1,10 @@
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.core.db.CRUD import ModelAccessor
 from app.user.model import User
-from app.user.schema import UserCreate, UserUpdateData
+from app.user.schema import UserCreate
+from app.user.schema import UserUpdateData
 
 
 class UserAccessor(ModelAccessor[User, UserCreate, UserUpdateData]):

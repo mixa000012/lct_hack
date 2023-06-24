@@ -43,6 +43,7 @@ class GroupCreate(BaseModel):
 class GroupUpdate(BaseModel):
     pass
 
+
 # class UserBase(BaseModel):
 #     name: str | int
 #     birthday_date: str

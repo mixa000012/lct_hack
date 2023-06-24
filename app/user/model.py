@@ -1,5 +1,6 @@
 from datetime import datetime
 from random import randint
+
 from sqlalchemy import Column
 from sqlalchemy import DateTime
 from sqlalchemy import Integer

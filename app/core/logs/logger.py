@@ -1,5 +1,4 @@
 # mypy: ignore-errors
-
 import logging
 
 from starlette_context import context
