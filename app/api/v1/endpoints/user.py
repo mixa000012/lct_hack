@@ -10,15 +10,15 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 
 import settings
-from api.actions.auth import auth_user
-from api.actions.auth import get_current_user_from_token
-from api.schemas import TokenData
-from app.user.schema import UserCreate
-from app.user.schema import User
-from app.user.schema import UserUpdateData
-from app.core.deps import get_db
-from security import create_access_token
 from app.core import store
+from app.core.deps import get_db
+from app.user.auth import auth_user
+from app.user.auth import get_current_user_from_token
+from app.user.schema import TokenData
+from app.user.schema import User
+from app.user.schema import UserCreate
+from app.user.schema import UserUpdateData
+from security import create_access_token
 
 router = APIRouter()
 
@@ -39,7 +39,7 @@ async def validate_date(date_text):
 
 @router.post("/token")
 async def login_for_token(
-        form_data: OAuth2PasswordRequestForm = Depends(), db: AsyncSession = Depends(get_db)
+    form_data: OAuth2PasswordRequestForm = Depends(), db: AsyncSession = Depends(get_db)
 ) -> TokenData:
     user = await auth_user(form_data.username, form_data.password, db)
     if not user:
@@ -61,19 +61,20 @@ async def create_user(obj: UserCreate, db: AsyncSession = Depends(get_db)) -> Us
     if user:
         raise HTTPException(status_code=409, detail="User already exists")
     user = await store.user.create(
-        db, obj_in=UserCreate(
+        db,
+        obj_in=UserCreate(
             name=obj.name,
             birthday_date=obj.birthday_date,
-        )
+        ),
     )
     return user
 
 
 @router.put("/update_user")
 async def update_user(
-        current_user: User = Depends(get_current_user_from_token),
-        update_data: UserUpdateData = Body(...),
-        db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user_from_token),
+    update_data: UserUpdateData = Body(...),
+    db: AsyncSession = Depends(get_db),
 ) -> User:
     updated_user = await store.user.update(
         db=db,

@@ -44,3 +44,8 @@ class UserShow(UserBase):
 
 class UserShowAddress(UserBase):
     created_at: str
+
+
+class TokenData(BaseModel):
+    access_token: str
+    token_type: str

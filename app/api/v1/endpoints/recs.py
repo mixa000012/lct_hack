@@ -1,28 +1,27 @@
 import ast
+
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
-
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from api.actions.auth import get_current_user_from_token
-
-from app.user.model import User
+from app.core import store
 from app.core.deps import get_db
+from app.user.auth import get_current_user_from_token
+from app.user.model import User
 from geocoding.get_coords import get_metro
 from ml.new_users import get_new_resc
 from ml.script import get_final_groups
 from ml.script import get_recs
-from app.core import store
 
 recs_router = APIRouter()
 
 
 @recs_router.get("/")
 async def give_recs(
-        current_user: User = Depends(get_current_user_from_token),
-        db: AsyncSession = Depends(get_db),
-        is_new: bool = False,
+    current_user: User = Depends(get_current_user_from_token),
+    db: AsyncSession = Depends(get_db),
+    is_new: bool = False,
 ) -> list[int]:
     if current_user.ml_result:
         result = current_user.ml_result
@@ -44,9 +43,7 @@ async def give_recs(
         result = await get_recs(int(current_user.id), N=12, new_user=False)
 
     await store.recs.update(
-        db=db,
-        db_obj=current_user,
-        obj_in={"ml_result": str(result)}
+        db=db, db_obj=current_user, obj_in={"ml_result": str(result)}
     )
 
     return result
@@ -54,7 +51,7 @@ async def give_recs(
 
 @recs_router.get("/is_recs_exist")
 async def is_recs_exist(
-        current_user: User = Depends(get_current_user_from_token),
+    current_user: User = Depends(get_current_user_from_token),
 ) -> bool:
     if current_user.survey_result:
         return True
