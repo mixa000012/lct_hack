@@ -1,9 +1,8 @@
 from datetime import datetime
 from datetime import timedelta
 
-from jose import jwt
-
 import settings
+from jose import jwt
 
 
 def create_access_token(data: dict, expires_delta: timedelta | None):

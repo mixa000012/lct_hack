@@ -7,9 +7,9 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
-import settings
 from app.core.deps import get_db
 from app.user.model import User
+from utils import settings
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/user/token")
 
