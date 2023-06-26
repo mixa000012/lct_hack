@@ -12,13 +12,13 @@ class Settings(BaseSettings):
     API_V1_STR: str = "/api/v1"
     SECRET_KEY: str = secrets.token_urlsafe(32)
 
-    PROJECT_NAME: str = "uneedtrip"
+    PROJECT_NAME: str = "lct_hack"
 
     PG_SERVER: str = "localhost"
     PG_PORT: int = 5432
-    PG_USER: str = "uneedtrip_user"
-    PG_PASSWORD: str = "uneedtrip_password"
-    PG_DB: str = "uneedtrip"
+    PG_USER: str = "user"
+    PG_PASSWORD: str = "password"
+    PG_DB: str = "postgres"
     PG_DATABASE_URI: PostgresDsn | None = None
     PG_POOL_MAX_SIZE: int = 3
     PG_POOL_RECYCLE: int = 1200
