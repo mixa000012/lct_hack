@@ -10,7 +10,7 @@ class Attend(BaseModel):
     direction_2: str
     direction_3: str
     Offline: bool
-    date: datetime
+    date: datetime | str
     start: str
     end: str
     metro: str
@@ -19,7 +19,6 @@ class Attend(BaseModel):
 
 class AttendCreate(Attend):
     pass
-
 
 class AttendUpdate(BaseModel):
     pass

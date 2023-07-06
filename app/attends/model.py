@@ -4,6 +4,7 @@ from sqlalchemy import Integer
 from sqlalchemy import String
 from sqlalchemy import Boolean
 from app.core.db.base_class import Base
+from datetime import datetime
 
 
 class Attends(Base):
@@ -14,7 +15,7 @@ class Attends(Base):
     direction_2 = Column(String)
     direction_3 = Column(String)
     Offline = Column(Boolean)
-    date = Column(DateTime)
+    date = Column(DateTime, default=datetime.now())
     start = Column(String)
     end = Column(String)
     metro = Column(String)

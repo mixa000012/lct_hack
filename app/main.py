@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from starlette.middleware import Middleware
 from starlette_context.middleware import RawContextMiddleware
 from tenacity import after_log, before_log, retry, stop_after_attempt, wait_fixed
-
+from sqlalchemy import text
 from app.api.v1.api import api_router
 from app.core.config import settings
 from app.core.db.session import AsyncSessionLocal
@@ -52,7 +52,7 @@ def set_logging() -> None:
 async def init() -> None:
     try:
         async with AsyncSessionLocal() as session:
-            await session.execute("SELECT 1")  # type: ignore
+            await session.execute(text("SELECT 1"))  # type: ignore
             logger.info("Database connected successfully...")
     except Exception as e:
         logger.error(e)

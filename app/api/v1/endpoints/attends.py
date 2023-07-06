@@ -5,8 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.attends.schema import Attend
 from app.attends.schema import AttendCreate
-from app.attends.utils import get_date
-from app.attends.utils import get_id
+from app.attends.utils import get_id, get_date
 from app.core import store
 from app.core.deps import get_db
 from app.groups.utils import calculate_time_to_walk
@@ -19,9 +18,9 @@ attends_router = APIRouter()
 
 @attends_router.post("/attends")
 async def create_attend(
-    group_id: int,
-    current_user: User = Depends(get_current_user_from_token),
-    db: AsyncSession = Depends(get_db),
+        group_id: int,
+        current_user: User = Depends(get_current_user_from_token),
+        db: AsyncSession = Depends(get_db),
 ) -> Attend:
     existing_attend = await store.attends.get_by_id(
         group_id=group_id, user_id=current_user.id, db=db
@@ -39,7 +38,6 @@ async def create_attend(
         direction_2=group.direction_2,
         direction_3=group.direction_3,
         Offline=False if group.closest_metro == "Онлайн" else True,
-        date=await get_date(),
         start=group.schedule_closed,
         end=str(
             await calculate_time_to_walk(group.coordinates_of_address, coordinates_user)
@@ -48,16 +46,16 @@ async def create_attend(
         else "0",
         metro=group.closest_metro,
         address=group.address,
+        date=await get_date()
     )
     attend = await store.attends.create(db=db, obj_in=db_attends)
-    return attend
-
+    return attend.__dict__
 
 @attends_router.delete("/attends/{id}")
 async def delete_attends(
-    id: int,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user_from_token),
+        id: int,
+        db: AsyncSession = Depends(get_db),
+        current_user: User = Depends(get_current_user_from_token),
 ):
     db_attends = await store.attends.remove(db=db, id=id)
     if not db_attends:
@@ -68,11 +66,10 @@ async def delete_attends(
 
 @attends_router.get("/attends_user")
 async def get_attends_by_id(
-    current_user: User = Depends(get_current_user_from_token),
-    db: AsyncSession = Depends(get_db),
+        current_user: User = Depends(get_current_user_from_token),
+        db: AsyncSession = Depends(get_db),
 ) -> list[Attend]:
-    attends = await store.attends.get_by_id(db=db, user_id=current_user.id)
-    attends_show = [Attend(**i) for i in attends]
+    attends = await store.attends.get_by_id_multi(db=db, user_id=current_user.id)
     if not attends:
         raise HTTPException(status_code=404, detail="Attends not found")
-    return attends_show
+    return attends

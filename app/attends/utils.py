@@ -1,8 +1,10 @@
 from datetime import datetime
 from random import randint
 
+
 async def get_date():
-    return datetime.now()
+    date = datetime.now()
+    return date
 
 
 async def get_id():
