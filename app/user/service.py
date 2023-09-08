@@ -1,0 +1,79 @@
+import datetime
+from datetime import timedelta
+
+from fastapi import Body
+from fastapi import Depends
+from fastapi import HTTPException
+from fastapi.security import OAuth2PasswordRequestForm
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core import store
+from app.core.deps import get_db
+from app.user.auth import auth_user
+from app.user.auth import get_current_user_from_token
+from app.user.schema import User
+from app.user.schema import UserCreate
+from app.user.schema import UserUpdateData
+from utils import settings
+from utils.security import create_access_token
+
+
+class UserDoesntExist(Exception):
+    pass
+
+
+class UserAlreadyExist(Exception):
+    pass
+
+
+async def validate_date(date_text):
+    try:
+        datetime.date.fromisoformat(date_text)
+        return
+    except ValueError:
+        raise HTTPException(
+            status_code=400, detail="Incorrect data format, should be YYYY-MM-DD"
+        )
+
+
+async def login_for_token(
+    form_data: OAuth2PasswordRequestForm = Depends(), db: AsyncSession = Depends(get_db)
+) -> str:
+    user = await auth_user(form_data.username, form_data.password, db)
+    if not user:
+        raise UserDoesntExist
+    access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE)
+    access_token = create_access_token(
+        data={"sub": str(user.id)},
+        expires_delta=access_token_expires,
+    )
+    return access_token
+
+
+async def create_user(obj: UserCreate, db: AsyncSession = Depends(get_db)) -> User:
+    await validate_date(obj.birthday_date)
+    user = await store.user.get_by_name(obj.name, obj.birthday_date, db)
+    if user:
+        raise UserAlreadyExist
+    user = await store.user.create(
+        db,
+        obj_in=UserCreate(
+            name=obj.name,
+            birthday_date=obj.birthday_date,
+        ),
+    )
+    return user
+
+
+async def update_user(
+    current_user: User = Depends(get_current_user_from_token),
+    update_data: UserUpdateData = Body(...),
+    db: AsyncSession = Depends(get_db),
+) -> User:
+    updated_user = await store.user.update(
+        db=db,
+        db_obj=current_user,
+        obj_in=update_data,
+    )
+
+    return updated_user

@@ -11,8 +11,9 @@ from app.user.auth import get_current_user_from_token
 from app.user.model import User
 from geocoding.get_coords import get_metro
 from ml.new_users import get_new_resc
-from ml.script import get_final_groups
-from ml.script import get_recs
+
+# from ml.script import get_final_groups
+# from ml.script import get_recs
 
 recs_router = APIRouter()
 
@@ -38,9 +39,9 @@ async def give_recs(
         result = get_new_resc(
             now_interests, current_user.sex, current_user.birthday_date
         )
-        result = await get_final_groups(chat_id=int(result), metro_human=metro)
+        result = await get_final_groups(chat_id=int(result), metro_human=metro)  # noqa
     else:
-        result = await get_recs(int(current_user.id), N=12, new_user=False)
+        result = await get_recs(int(current_user.id), N=12, new_user=False)  # noqa
 
     await store.recs.update(
         db=db, db_obj=current_user, obj_in={"ml_result": str(result)}
@@ -56,7 +57,7 @@ async def is_recs_exist(
     if current_user.survey_result:
         return True
     try:
-        await get_recs(int(current_user.id), N=10, new_user=False)
+        await get_recs(int(current_user.id), N=10, new_user=False)  # noqa
         return True
     except KeyError:
         return False

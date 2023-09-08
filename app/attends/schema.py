@@ -1,16 +1,12 @@
-from enum import Enum
-from datetime import datetime
 from pydantic.main import BaseModel
 
 
 class Attend(BaseModel):
-    id: int
     group_id: int
     user_id: int
     direction_2: str
     direction_3: str
-    Offline: bool
-    date: datetime | str
+    offline: bool
     start: str
     end: str
     metro: str
@@ -19,6 +15,7 @@ class Attend(BaseModel):
 
 class AttendCreate(Attend):
     pass
+
 
 class AttendUpdate(BaseModel):
     pass

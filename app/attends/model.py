@@ -1,10 +1,11 @@
+from sqlalchemy import Boolean
 from sqlalchemy import Column
 from sqlalchemy import DateTime
 from sqlalchemy import Integer
 from sqlalchemy import String
-from sqlalchemy import Boolean
+from sqlalchemy.sql import func
+
 from app.core.db.base_class import Base
-from datetime import datetime
 
 
 class Attends(Base):
@@ -14,8 +15,8 @@ class Attends(Base):
     user_id = Column(Integer)
     direction_2 = Column(String)
     direction_3 = Column(String)
-    Offline = Column(Boolean)
-    date = Column(DateTime, default=datetime.now())
+    offline = Column(Boolean)
+    date = Column(DateTime(timezone=True), default=func.now())
     start = Column(String)
     end = Column(String)
     metro = Column(String)

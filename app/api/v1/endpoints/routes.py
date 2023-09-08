@@ -1,33 +1,17 @@
-import ast
-import openrouteservice
 from fastapi import APIRouter
-from openrouteservice.geocode import pelias_autocomplete
-from openrouteservice.geocode import pelias_reverse
 
-client = openrouteservice.Client(
-    key="5b3ce3597851110001cf6248d849a8330bbd463fb95a896f83abd13f"
-)  # Specify your personal API key
+from app.routes import service
 
-routes_router = APIRouter()
+router = APIRouter()
 
 
-@routes_router.get("/suggest")
+@router.get("/suggest")
 async def suggest(query: str) -> list[str]:
-    results = []
-    try:
-        routes = pelias_autocomplete(client, query, country="RUS", layers=["address"])
-        for i in range(10):
-            result = routes.get("features")[i].get("properties").get("name")
-            results.append(result)
-    except:
-        return results
-
+    results = await service.suggest(query)
     return results
 
 
-@routes_router.get("/address")
+@router.get("/address")
 async def get_address(coordinates: str) -> dict:
-    coordinates = ast.literal_eval(coordinates)
-    coordinates = (coordinates[1], coordinates[0])
-    routes = pelias_reverse(client, coordinates, country="RUS")
+    routes = await service.get_address(coordinates)
     return routes
